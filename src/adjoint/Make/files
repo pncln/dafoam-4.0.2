@@ -89,7 +89,7 @@ DAStateInfo/DAStateInfoRhoSimpleCFoam.C
 DAStateInfo/DAStateInfoTurboFoam.C
 DAStateInfo/DAStateInfoHeatTransferFoam.C
 DAStateInfo/DAStateInfoSolidDisplacementFoam.C
-DAStateInfo/DAStateInfoSonicPimpleFoam.C
+DAStateInfo/DAStateInfoSonicFoam.C
 
 DAResidual/DAResidual.C
 DAResidual/DAResidualSimpleFoam.C
@@ -101,7 +101,7 @@ DAResidual/DAResidualRhoSimpleCFoam.C
 DAResidual/DAResidualTurboFoam.C
 DAResidual/DAResidualHeatTransferFoam.C
 DAResidual/DAResidualSolidDisplacementFoam.C
-DAResidual/DAResidualSonicPimpleFoam.C
+DAResidual/DAResidualSonicFoam.C
 
 DASolver/DASolver.C
 DASolver/DASimpleFoam/DASimpleFoam.C
@@ -114,7 +114,7 @@ DASolver/DARhoSimpleCFoam/DARhoSimpleCFoam.C
 DASolver/DATurboFoam/DATurboFoam.C
 DASolver/DAHeatTransferFoam/DAHeatTransferFoam.C
 DASolver/DASolidDisplacementFoam/DASolidDisplacementFoam.C
-DASolver/DASonicPimpleFoam/DASonicPimpleFoam.C
+DASolver/DASonicFoam/DASonicFoam.C
 
 DAMisc/MRFDF/MRFZoneDF.C
 DAMisc/MRFDF/MRFZoneListDF.C

@@ -31,6 +31,7 @@ LIB_LIBS = \
     -lcompressibleTransportModels$(WM_CODI_AD_LIB_POSTFIX) \
     -lincompressibleTransportModels$(WM_CODI_AD_LIB_POSTFIX) \
     -lfluidThermophysicalModels$(WM_CODI_AD_LIB_POSTFIX) \
+    -L/opt/homebrew/lib \
     -lspecie$(WM_CODI_AD_LIB_POSTFIX) \
     -lturbulenceModels$(WM_CODI_AD_LIB_POSTFIX) \
     -lcompressibleTurbulenceModels$(WM_CODI_AD_LIB_POSTFIX) \

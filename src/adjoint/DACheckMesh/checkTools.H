@@ -29,7 +29,7 @@
 
 #include "scalar.H"
 #include "indirectPrimitivePatch.H"
-#include "writer.H"
+// #include "writer.H"  // Temporarily commented out
 
 namespace Foam
 {

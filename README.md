@@ -5,7 +5,7 @@ Super-sonic sovler for DAFoam
 Mathematical Summary
 -------------
 
-  | Aspect     | DAPimpleFoam                 | DASonicPimpleFoam                               |
+  | Aspect     | DAPimpleFoam                 | DASonicFoam                                     |
   |------------|------------------------------|-------------------------------------------------|
   | Momentum   | ∂U/∂t + ∇·(UU) = -∇p/ρ + ∇·τ | ∂(ρU)/∂t + ∇·(ρUU) = -∇p + ∇·τ                  |
   | Continuity | ∇·U = 0                      | ∂ρ/∂t + ∇·(ρU) = 0                              |

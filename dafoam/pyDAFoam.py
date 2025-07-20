@@ -67,6 +67,7 @@ class DAOPTION(object):
         ## - DARhoSimpleFoam:         Compressible steady-state flow solver for Navier-Stokes equations (subsonic)
         ## - DARhoSimpleCFoam:        Compressible steady-state flow solver for Navier-Stokes equations (transonic)
         ## - DATurboFoam:             Compressible steady-state flow solver for Navier-Stokes equations (turbomachinery)
+        ## - DASonicPimpleFoam:       Compressible supersonic flow solver with shock capturing capabilities
         ## - DASolidDisplacementFoam: Steady-state structural solver for linear elastic equations
         self.solverName = "DASimpleFoam"
 

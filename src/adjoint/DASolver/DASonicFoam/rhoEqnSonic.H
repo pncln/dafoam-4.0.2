@@ -33,7 +33,7 @@
     (
         fvm::ddt(rho)
       + fvc::div(phi)
-      - fvSource
+      - fvc::div(fvSource)
     );
 
     // get the solver performance info such as initial

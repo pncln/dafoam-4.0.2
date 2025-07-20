@@ -37,7 +37,6 @@ DAResidualSonicPimpleFoam::DAResidualSonicPimpleFoam(
       thermo_(const_cast<fluidThermo&>(mesh_.thisDb().lookupObject<fluidThermo>("thermophysicalProperties"))),
       // create pimpleControl
       pimple_(const_cast<fvMesh&>(mesh)),
-      pressureControl_(const_cast<pressureControl&>(mesh_.thisDb().lookupObject<pressureControl>("pressureControl"))),
       shockSensor_(const_cast<volScalarField&>(
           mesh_.thisDb().lookupObject<volScalarField>("shockSensor")))
 {
@@ -162,12 +161,14 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
     rhoRes_ = rhoEqn & rho_;
 
     // Momentum equation with compressible effects and shock capturing
+    // For compressible flow: dynamic viscosity = kinematic viscosity * density
     volScalarField muEff("muEff", daTurb_.nuEff() * rho_);
     
     // Add artificial viscosity for shock capturing
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = volScalarField(
+        // Create proper volScalarField for cell volume
+        volScalarField cellVolume(
             IOobject(
                 "cellVolume",
                 mesh_.time().timeName(),
@@ -204,7 +205,7 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
     // Add artificial thermal diffusivity for shock capturing
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = volScalarField(
+        volScalarField cellVolume(
             IOobject(
                 "cellVolume2",
                 mesh_.time().timeName(),
@@ -225,14 +226,15 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
         alphaEff += artificialAlpha;
     }
 
-    // Calculate kinetic energy terms separately
-    volScalarField rhoKE = rho_ * 0.5 * magSqr(U_);
+    // Calculate kinetic energy terms properly
+    volScalarField K = 0.5 * magSqr(U_);
+    volScalarField rhoK = rho_ * K;
     
     fvScalarMatrix EEqn(
         fvm::ddt(rho_, he)
       + fvm::div(phi_, he, divTScheme)
-      + fvc::ddt(rhoKE)
-      + fvc::div(phi_, 0.5*magSqr(U_))
+      + fvc::ddt(rhoK)
+      + fvc::div(phi_, K)
       + (
             he.name() == "e"
           ? fvc::div
@@ -317,7 +319,6 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     const labelList& owner = mesh_.owner();
     const labelList& neighbour = mesh_.neighbour();
     const dictionary& allOptions = daOption_.getAllOptions();
-    const dictionary& normResDict = allOptions.subDict("normalizeResiduals");
     
     PetscScalar val = 0.0;
     scalar UScaling = 1.0;
@@ -332,7 +333,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     scalar TResScaling = 1.0;
     scalar phiResScaling = 1.0;
 
-    // Get normalization factors
+    // Get normalization factors if they exist
     if (allOptions.found("normalizeStates"))
     {
         const dictionary& normStateDict = allOptions.subDict("normalizeStates");
@@ -343,13 +344,19 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         if (normStateDict.found("phi")) phiScaling = normStateDict.getScalar("phi");
     }
 
+    if (allOptions.found("normalizeResiduals"))
+    {
+        const dictionary& normResDict = allOptions.subDict("normalizeResiduals");
+        // Residual scaling will be handled per cell if needed
+    }
+
     // ******** Momentum equation matrix (URes) **********
     volScalarField muEff("muEff", daTurb_.nuEff() * rho_);
     
     // Add artificial viscosity for shock capturing
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = volScalarField(
+        volScalarField cellVolume(
             IOobject("cellVolume", mesh_.time().timeName(), mesh_, IOobject::NO_READ, IOobject::NO_WRITE),
             mesh_, dimensionedScalar("zero", dimVolume, 0.0));
         forAll(cellVolume, cellI) { cellVolume[cellI] = mesh_.V()[cellI]; }
@@ -368,7 +375,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // Set diagonal entries for momentum
     forAll(U_, cellI)
     {
-        if (normResDict.found("URes")) UResScaling = mesh_.V()[cellI];
+        UResScaling = mesh_.V()[cellI];
         for (label i = 0; i < 3; i++)
         {
             PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("U", cellI, i);
@@ -386,7 +393,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         label ownerCellI = owner[faceI];
         label neighbourCellI = neighbour[faceI];
 
-        if (normResDict.found("URes")) UResScaling = mesh_.V()[neighbourCellI];
+        UResScaling = mesh_.V()[neighbourCellI];
 
         for (label i = 0; i < 3; i++)
         {
@@ -403,7 +410,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         label ownerCellI = owner[faceI];
         label neighbourCellI = neighbour[faceI];
 
-        if (normResDict.found("URes")) UResScaling = mesh_.V()[ownerCellI];
+        UResScaling = mesh_.V()[ownerCellI];
 
         for (label i = 0; i < 3; i++)
         {
@@ -429,7 +436,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // Set diagonal entries for pressure
     forAll(p_, cellI)
     {
-        if (normResDict.found("pRes")) pResScaling = mesh_.V()[cellI];
+        pResScaling = mesh_.V()[cellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", cellI);
         PetscInt colI = rowI;
         scalarField D = pEqn.D();
@@ -444,7 +451,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         label ownerCellI = owner[faceI];
         label neighbourCellI = neighbour[faceI];
 
-        if (normResDict.found("pRes")) pResScaling = mesh_.V()[neighbourCellI];
+        pResScaling = mesh_.V()[neighbourCellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
         PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
         scalar val1 = pEqn.lower()[faceI] * pScaling / pResScaling;
@@ -457,7 +464,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         label ownerCellI = owner[faceI];
         label neighbourCellI = neighbour[faceI];
 
-        if (normResDict.found("pRes")) pResScaling = mesh_.V()[ownerCellI];
+        pResScaling = mesh_.V()[ownerCellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
         PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
         scalar val1 = pEqn.upper()[faceI] * pScaling / pResScaling;
@@ -472,7 +479,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // Add artificial thermal diffusivity
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = volScalarField(
+        volScalarField cellVolume(
             IOobject("cellVolume2", mesh_.time().timeName(), mesh_, IOobject::NO_READ, IOobject::NO_WRITE),
             mesh_, dimensionedScalar("zero", dimVolume, 0.0));
         forAll(cellVolume, cellI) { cellVolume[cellI] = mesh_.V()[cellI]; }
@@ -481,20 +488,21 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         alphaEff += artificialViscosityCoeff_ * shockSensor_ * cellSize * rho_ * mag(U_) * thermo_.Cp();
     }
 
-    volScalarField rhoKE = rho_ * 0.5 * magSqr(U_);
+    volScalarField K = 0.5 * magSqr(U_);
+    volScalarField rhoK = rho_ * K;
     
     fvScalarMatrix EEqn(
         fvm::ddt(rho_, he)
       + fvm::div(phi_, he, "div(pc)")
-      + fvc::ddt(rhoKE)
-      + fvc::div(phi_, 0.5*magSqr(U_))
+      + fvc::ddt(rhoK)
+      + fvc::div(phi_, K)
       - fvm::laplacian(alphaEff, he)
       - fvSourceEnergy_);
 
     // Set diagonal entries for energy/temperature
     forAll(T_, cellI)
     {
-        if (normResDict.found("TRes")) TResScaling = mesh_.V()[cellI];
+        TResScaling = mesh_.V()[cellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("T", cellI);
         PetscInt colI = rowI;
         scalarField D = EEqn.D();
@@ -508,7 +516,7 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
 
     forAll(rho_, cellI)
     {
-        if (normResDict.found("rhoRes")) rhoResScaling = mesh_.V()[cellI];
+        rhoResScaling = mesh_.V()[cellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("rho", cellI);
         PetscInt colI = rowI;
         scalarField D = rhoEqn.D();
@@ -517,10 +525,10 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
         MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
     }
 
-    // ******** Flux equation (phiRes) - simplified diagonal **********
+    // ******** Flux equation (phiRes) - diagonal **********
     forAll(phi_, faceI)
     {
-        if (normResDict.found("phiRes")) phiResScaling = 1.0;
+        phiResScaling = 1.0;
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("phi", faceI);
         PetscInt colI = rowI;
         scalar val1 = 1.0 * phiScaling / phiResScaling;

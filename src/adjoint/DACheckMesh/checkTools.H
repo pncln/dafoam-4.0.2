@@ -29,7 +29,7 @@
 
 #include "scalar.H"
 #include "indirectPrimitivePatch.H"
-// #include "writer.H"  // Temporarily commented out
+#include "vtkSetWriter.H"
 
 namespace Foam
 {
@@ -40,6 +40,8 @@ class faceSet;
 class cellSet;
 class fileName;
 class polyMesh;
+
+template<class Type> class writer;
 
 //- Generate merged surface on master and write. Needs input patch
 //  to be of mesh faces.

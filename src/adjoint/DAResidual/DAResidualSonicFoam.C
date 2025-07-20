@@ -56,7 +56,7 @@ DAResidualSonicFoam::DAResidualSonicFoam(
           mesh_.thisDb().lookupObject<volScalarField>("K"))),
       daTurb_(const_cast<DATurbulenceModel&>(daModel.getDATurbulenceModel())),
       // create pimpleControl
-      pimple_(const_cast<fvMesh&>(mesh))
+      pimple_(const_cast<fvMesh&>(mesh), "PIMPLE")
 {
 
     // initialize fvSource

@@ -301,8 +301,27 @@ void DASonicPimpleFoam::calcShockSensor()
     // Normalize by local pressure to get relative gradient
     volScalarField relativeGradP = magGradP / (p + dimensionedScalar("small", p.dimensions(), SMALL));
     
-    // Apply smoothing to avoid numerical oscillations
-    shockSensor = fvc::smooth(relativeGradP, 2);
+    // Apply simple averaging to smooth oscillations (instead of fvc::smooth)
+    shockSensor = relativeGradP;
+    
+    // Apply a simple 3x3 cell averaging for smoothing
+    forAll(shockSensor, cellI)
+    {
+        scalar avgSensor = relativeGradP[cellI];
+        label nNeighbors = 1;
+        
+        const labelList& cellCells = mesh.cellCells()[cellI];
+        forAll(cellCells, neighborI)
+        {
+            avgSensor += relativeGradP[cellCells[neighborI]];
+            nNeighbors++;
+        }
+        
+        shockSensor[cellI] = avgSensor / nNeighbors;
+    }
+    
+    // Update boundary conditions
+    shockSensor.correctBoundaryConditions();
     
     // Limit shock sensor to reasonable values
     shockSensor = min(shockSensor, dimensionedScalar("maxSensor", dimless, 10.0));

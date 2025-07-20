@@ -279,26 +279,128 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
 {
     /*
     Description:
-        Calculate the diagonal of the preconditioner matrix dRdW.
-        NOTE: for compressible flow, we need to include coupling between
-        momentum, pressure, density, and energy equations.
+        Calculate the preconditioner matrix dRdW for compressible flow.
+        This is a simplified diagonal preconditioning approach.
     */
 
-    dictionary options;
-    options.set("isPC", 1);
-    
-    // Calculate residuals with 1st order scheme for preconditioning
-    this->calcResiduals(options);
+    const labelList& owner = mesh_.owner();
+    const labelList& neighbour = mesh_.neighbour();
 
-    // Extract diagonal entries for preconditioner
-    // This is a simplified approach - full implementation would include
-    // coupling terms between equations
+    PetscScalar val = 0.0;
     
-    DAUtility::setMatrixDiag(PCMat, daIndex_, "U", URes_);
-    DAUtility::setMatrixDiag(PCMat, daIndex_, "p", pRes_);
-    DAUtility::setMatrixDiag(PCMat, daIndex_, "rho", rhoRes_);
-    DAUtility::setMatrixDiag(PCMat, daIndex_, "T", TRes_);
-    DAUtility::setMatrixDiag(PCMat, daIndex_, "phi", phiRes_);
+    // Get scaling factors from normalization
+    const dictionary& allOptions = daOption_.getAllOptions();
+    const dictionary& normStateDict = allOptions.subDict("normalizeStates");
+    const dictionary& normResDict = allOptions.subDict("normalizeResiduals");
+    
+    scalar UScaling = 1.0;
+    scalar pScaling = 1.0;
+    scalar rhoScaling = 1.0;
+    scalar TScaling = 1.0;
+    scalar phiScaling = 1.0;
+    
+    scalar UResScaling = 1.0;
+    scalar pResScaling = 1.0;
+    scalar rhoResScaling = 1.0;
+    scalar TResScaling = 1.0;
+    scalar phiResScaling = 1.0;
+
+    if (normStateDict.found("U"))
+    {
+        UScaling = normStateDict.getScalar("U");
+    }
+    if (normStateDict.found("p"))
+    {
+        pScaling = normStateDict.getScalar("p");
+    }
+    if (normStateDict.found("rho"))
+    {
+        rhoScaling = normStateDict.getScalar("rho");
+    }
+    if (normStateDict.found("T"))
+    {
+        TScaling = normStateDict.getScalar("T");
+    }
+    if (normStateDict.found("phi"))
+    {
+        phiScaling = normStateDict.getScalar("phi");
+    }
+
+    // Calculate simplified diagonal preconditioner entries
+    // This is a basic implementation - could be enhanced with coupling terms
+
+    // U diagonal entries
+    forAll(U_, cellI)
+    {
+        if (normResDict.found("URes"))
+        {
+            UResScaling = mesh_.V()[cellI];
+        }
+        for (label i = 0; i < 3; i++)
+        {
+            PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("U", cellI, i);
+            PetscInt colI = rowI;
+            scalar val1 = 1.0 * UScaling / UResScaling;  // Simplified diagonal
+            assignValueCheckAD(val, val1);
+            MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+        }
+    }
+
+    // p diagonal entries
+    forAll(p_, cellI)
+    {
+        if (normResDict.found("pRes"))
+        {
+            pResScaling = mesh_.V()[cellI];
+        }
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", cellI);
+        PetscInt colI = rowI;
+        scalar val1 = 1.0 * pScaling / pResScaling;  // Simplified diagonal
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
+
+    // rho diagonal entries
+    forAll(rho_, cellI)
+    {
+        if (normResDict.found("rhoRes"))
+        {
+            rhoResScaling = mesh_.V()[cellI];
+        }
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("rho", cellI);
+        PetscInt colI = rowI;
+        scalar val1 = 1.0 * rhoScaling / rhoResScaling;  // Simplified diagonal
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
+
+    // T diagonal entries
+    forAll(T_, cellI)
+    {
+        if (normResDict.found("TRes"))
+        {
+            TResScaling = mesh_.V()[cellI];
+        }
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("T", cellI);
+        PetscInt colI = rowI;
+        scalar val1 = 1.0 * TScaling / TResScaling;  // Simplified diagonal
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
+
+    // phi diagonal entries
+    forAll(phi_, faceI)
+    {
+        if (normResDict.found("phiRes"))
+        {
+            phiResScaling = 1.0;
+        }
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("phi", faceI);
+        PetscInt colI = rowI;
+        scalar val1 = 1.0 * phiScaling / phiResScaling;  // Simplified diagonal
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
 }
 
 void DAResidualSonicPimpleFoam::calcShockSensor()
@@ -315,8 +417,27 @@ void DAResidualSonicPimpleFoam::calcShockSensor()
     // Normalize by local pressure to get relative gradient
     volScalarField relativeGradP = magGradP / (p_ + dimensionedScalar("small", p_.dimensions(), SMALL));
     
-    // Apply smoothing to avoid numerical oscillations
-    shockSensor_ = fvc::smooth(relativeGradP, 2);
+    // Apply simple averaging to smooth oscillations (instead of fvc::smooth)
+    shockSensor_ = relativeGradP;
+    
+    // Apply a simple 3x3 cell averaging for smoothing
+    forAll(shockSensor_, cellI)
+    {
+        scalar avgSensor = relativeGradP[cellI];
+        label nNeighbors = 1;
+        
+        const labelList& cellCells = mesh_.cellCells()[cellI];
+        forAll(cellCells, neighborI)
+        {
+            avgSensor += relativeGradP[cellCells[neighborI]];
+            nNeighbors++;
+        }
+        
+        shockSensor_[cellI] = avgSensor / nNeighbors;
+    }
+    
+    // Update boundary conditions
+    shockSensor_.correctBoundaryConditions();
     
     // Limit shock sensor to reasonable values
     shockSensor_ = min(shockSensor_, dimensionedScalar("maxSensor", dimless, 10.0));
@@ -345,8 +466,9 @@ void DAResidualSonicPimpleFoam::boundThermodynamicProperties()
     rho_ = max(rho_, dimensionedScalar("rhoMin", rho_.dimensions(), 1e-8));
     rho_ = min(rho_, dimensionedScalar("rhoMax", rho_.dimensions(), 1000.0));
     
-    // Bound pressure to positive values
-    p_ = max(p_, thermo_.pMin());
+    // Bound pressure to positive values (use a minimum pressure value)
+    dimensionedScalar pMin("pMin", p_.dimensions(), 1e-8);
+    p_ = max(p_, pMin);
     
     // Bound temperature
     T_ = max(T_, dimensionedScalar("TMin", T_.dimensions(), 50.0));

@@ -16,10 +16,10 @@ Mathematical Summary
 Documentation
 -------------
 
-cd $DAFOAM_ROOT_PATH/repos && \
-wget https://github.com/pncln/dafoam-4.0.2/archive/refs/tags/test.tar.gz -O dafoam.tar.gz && \
-tar -xvf dafoam.tar.gz && cd dafoam-* && \
-. $DAFOAM_ROOT_PATH/loadDAFoam.sh && \
+cd "$DAFOAM_ROOT_PATH/repos" && \
+rm -rf dafoam-4.0.2 && \
+git clone https://github.com/pncln/dafoam-4.0.2.git && \
+cd dafoam-4.0.2 && \
 ./Allmake
 
 Refer to https://dafoam.github.io for installation, documentation, and tutorials.

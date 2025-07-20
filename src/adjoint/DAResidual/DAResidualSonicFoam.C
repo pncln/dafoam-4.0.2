@@ -233,32 +233,6 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     // phi is surface field, no need to correct boundary conditions
 }
 
-void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
-{
-    /*
-    Description:
-        Calculate the preconditioner matrix using fvMatrix
-    */
-
-    // create pimpleControl
-    pimpleControl pimple(const_cast<fvMesh&>(mesh_));
-
-    dictionary pcOptions;
-    pcOptions.set("isPC", 1);
-    this->calcResiduals(pcOptions);
-
-    // URes
-    this->setResidualToPCMat(URes_, "U", PCMat);
-
-    // pRes
-    this->setResidualToPCMat(pRes_, "p", PCMat);
-
-    // ERes
-    this->setResidualToPCMat(eRes_, "e", PCMat);
-
-    // phiRes
-    this->setResidualToPCMat(phiRes_, "phi", PCMat);
-}
 
 } // End namespace Foam
 

@@ -288,43 +288,118 @@ void DASonicPimpleFoam::calcShockSensor()
 {
     /*
     Description:
-        Calculate shock sensor based on pressure gradient magnitude
+        Calculate advanced shock sensor for supersonic flows using multiple indicators:
+        1. Pressure gradient magnitude (primary indicator)
+        2. Velocity divergence (expansion/compression detection)
+        3. Density gradient (density jumps across shocks)
+        4. Mach number gradient (transonic/supersonic transitions)
     */
     
     const volScalarField& p = pPtr_();
+    const volVectorField& U = UPtr_();
+    const volScalarField& rho = rhoPtr_();
+    const fluidThermo& thermo = pThermoPtr_();
     volScalarField& shockSensor = shockSensorPtr_();
+    const fvMesh& mesh = meshPtr_();
     
-    // Calculate pressure gradient magnitude
+    // Primary shock indicator: normalized pressure gradient
     volVectorField gradP = fvc::grad(p);
     volScalarField magGradP = mag(gradP);
+    volScalarField pressureIndicator = magGradP / 
+        (p + dimensionedScalar("small", p.dimensions(), SMALL));
     
-    // Normalize by local pressure to get relative gradient
-    volScalarField relativeGradP = magGradP / (p + dimensionedScalar("small", p.dimensions(), SMALL));
+    // Secondary indicator: velocity divergence (detects expansion fans and compression)
+    volScalarField divU = fvc::div(U);
+    volScalarField compressionIndicator = mag(divU) * mag(U) / 
+        (mag(U) + dimensionedScalar("smallU", U.dimensions(), SMALL));
     
-    // Apply simple averaging to smooth oscillations (instead of fvc::smooth)
-    shockSensor = relativeGradP;
+    // Tertiary indicator: density gradient (captures density jumps)
+    volVectorField gradRho = fvc::grad(rho);
+    volScalarField magGradRho = mag(gradRho);
+    volScalarField densityIndicator = magGradRho / 
+        (rho + dimensionedScalar("smallRho", rho.dimensions(), SMALL));
     
-    // Apply a simple 3x3 cell averaging for smoothing
-    forAll(shockSensor, cellI)
+    // Quaternary indicator: Mach number gradient for transonic regions
+    volScalarField c = sqrt(thermo.Cp()/thermo.Cv() * p / rho); // Speed of sound
+    volScalarField Mach = mag(U) / c;
+    volVectorField gradMach = fvc::grad(Mach);
+    volScalarField machIndicator = mag(gradMach);
+    
+    // Combine indicators with weighted average
+    // Higher weights for primary indicators in supersonic flows
+    scalar wP = 0.5;    // Pressure gradient weight
+    scalar wDiv = 0.2;  // Velocity divergence weight  
+    scalar wRho = 0.2;  // Density gradient weight
+    scalar wMach = 0.1; // Mach gradient weight
+    
+    volScalarField combinedSensor = 
+        wP * pressureIndicator + 
+        wDiv * compressionIndicator + 
+        wRho * densityIndicator + 
+        wMach * machIndicator;
+    
+    // Apply advanced multi-pass smoothing to reduce numerical noise
+    // Pass 1: Weighted average with immediate neighbors
+    volScalarField smoothedSensor = combinedSensor;
+    forAll(smoothedSensor, cellI)
     {
-        scalar avgSensor = relativeGradP[cellI];
-        label nNeighbors = 1;
+        scalar weightedSum = combinedSensor[cellI];
+        scalar totalWeight = 1.0;
         
         const labelList& cellCells = mesh.cellCells()[cellI];
         forAll(cellCells, neighborI)
         {
-            avgSensor += relativeGradP[cellCells[neighborI]];
-            nNeighbors++;
+            label neighCellI = cellCells[neighborI];
+            scalar weight = 0.5; // Neighbor weight
+            weightedSum += weight * combinedSensor[neighCellI];
+            totalWeight += weight;
         }
         
-        shockSensor[cellI] = avgSensor / nNeighbors;
+        smoothedSensor[cellI] = weightedSum / totalWeight;
+    }
+    
+    // Pass 2: Apply TVD limiter to prevent spurious oscillations
+    forAll(smoothedSensor, cellI)
+    {
+        scalar sensorValue = smoothedSensor[cellI];
+        scalar maxNeighbor = sensorValue;
+        scalar minNeighbor = sensorValue;
+        
+        const labelList& cellCells = mesh.cellCells()[cellI];
+        forAll(cellCells, neighborI)
+        {
+            label neighCellI = cellCells[neighborI];
+            maxNeighbor = max(maxNeighbor, smoothedSensor[neighCellI]);
+            minNeighbor = min(minNeighbor, smoothedSensor[neighCellI]);
+        }
+        
+        // TVD limiting: constrain sensor between min and max of neighbors
+        scalar limitedValue = max(minNeighbor, min(maxNeighbor, sensorValue));
+        smoothedSensor[cellI] = limitedValue;
     }
     
     // Update boundary conditions
-    shockSensor.correctBoundaryConditions();
+    smoothedSensor.correctBoundaryConditions();
     
-    // Limit shock sensor to reasonable values
-    shockSensor = min(shockSensor, dimensionedScalar("maxSensor", dimless, 10.0));
+    // Apply nonlinear scaling to enhance shock detection
+    // Use tanh function for smooth activation near shocks
+    scalar threshold = 0.1; // Threshold for shock detection
+    scalar steepness = 10.0; // Steepness of activation function
+    
+    forAll(shockSensor, cellI)
+    {
+        scalar rawSensor = smoothedSensor[cellI];
+        // Smooth step function: 0.5 * (1 + tanh(steepness * (sensor - threshold)))
+        scalar activatedSensor = 0.5 * (1.0 + tanh(steepness * (rawSensor - threshold)));
+        shockSensor[cellI] = activatedSensor;
+    }
+    
+    // Final bounds to ensure physical values
+    shockSensor = max(shockSensor, dimensionedScalar("minSensor", dimless, 0.0));
+    shockSensor = min(shockSensor, dimensionedScalar("maxSensor", dimless, 1.0));
+    
+    // Update boundary conditions one final time
+    shockSensor.correctBoundaryConditions();
 }
 
 void DASonicPimpleFoam::applyArtificialViscosity()

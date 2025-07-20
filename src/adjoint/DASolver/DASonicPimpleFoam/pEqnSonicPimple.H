@@ -68,9 +68,9 @@ rho = pThermo.rho();
 rho = max(rho, dimensionedScalar("rhoMin", rho.dimensions(), 1e-8));
 
 // Calculate and report compressible continuity error
-// Calculate and report compressible continuity error
 {
-    scalar sumLocalContErr = (fvc::ddt(rho) + fvc::div(phi)).weightedAverage(mesh.V()).value();
+    volScalarField contErr = fvc::ddt(rho) + fvc::div(phi);
+    scalar sumLocalContErr = contErr.weightedAverage(mesh.V()).value();
     scalar globalContErr = runTime.deltaTValue() * sumLocalContErr;
     cumulativeContErr_ += globalContErr;
     

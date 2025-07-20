@@ -143,7 +143,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     fvScalarMatrix rhoEqn(
         fvm::ddt(rho_)
         + fvc::div(phi_)
-        - fvSource_);
+        - fvc::div(fvSource_));
 
     rhoRes_ = rhoEqn & rho_;
 
@@ -182,11 +182,11 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     phiRes_ = pEqn.flux() - phi_;
 
     // need to normalize residuals
-    normalizeResiduals(URes_);
-    normalizeResiduals(pRes_);
-    normalizeResiduals(eRes_);
-    normalizeResiduals(rhoRes_);
-    normalizeResiduals(phiRes_);
+    normalizeResiduals(URes);
+    normalizeResiduals(pRes);
+    normalizeResiduals(eRes);
+    normalizeResiduals(rhoRes);
+    normalizeResiduals(phiRes);
 }
 
 void DAResidualSonicFoam::updateIntermediateVariables()
@@ -229,7 +229,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
 
     U_.correctBoundaryConditions();
     p_.correctBoundaryConditions();
-    he_.correctBoundaryConditions();
+    e_.correctBoundaryConditions();
     // phi is surface field, no need to correct boundary conditions
 }
 

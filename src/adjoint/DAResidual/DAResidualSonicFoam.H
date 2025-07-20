@@ -18,6 +18,7 @@
 #include "thermodynamicConstants.H"
 #include "pressureControl.H"
 #include "constrainPressure.H"
+#include "psiThermo.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +43,7 @@ protected:
     volScalarField pRes_;
 
     volScalarField& e_;
-    volScalarField ERes_;
+    volScalarField eRes_;
 
     surfaceScalarField& phi_;
     surfaceScalarField phiRes_;

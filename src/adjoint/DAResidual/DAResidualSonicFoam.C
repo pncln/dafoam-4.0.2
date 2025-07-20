@@ -92,7 +92,7 @@ void DAResidualSonicFoam::clear()
     */
     URes_.clear();
     pRes_.clear();
-    ERes_.clear();
+    eRes_.clear();
     phiRes_.clear();
 }
 
@@ -109,7 +109,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         p_, he_, U_, phi_, etc: State variables in OpenFOAM
     
     Output:
-        URes_, pRes_, ERes_, phiRes_: residuals
+        URes_, pRes_, eRes_, phiRes_: residuals
     */
 
     // We dont support transonic = false
@@ -136,7 +136,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvm::laplacian(daTurb_.alphaEff(), e_)
         - fvSourceEnergy_);
 
-    ERes_ = EEqn & e_;
+    eRes_ = EEqn & e_;
 
     // ********* rho Residuals **********
     // Density continuity equation exactly like original sonicFoam
@@ -184,7 +184,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     // need to normalize residuals
     normalizeResiduals(URes_);
     normalizeResiduals(pRes_);
-    normalizeResiduals(ERes_);
+    normalizeResiduals(eRes_);
     normalizeResiduals(rhoRes_);
     normalizeResiduals(phiRes_);
 }
@@ -254,7 +254,7 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     this->setResidualToPCMat(pRes_, "p", PCMat);
 
     // ERes
-    this->setResidualToPCMat(ERes_, "e", PCMat);
+    this->setResidualToPCMat(eRes_, "e", PCMat);
 
     // phiRes
     this->setResidualToPCMat(phiRes_, "phi", PCMat);

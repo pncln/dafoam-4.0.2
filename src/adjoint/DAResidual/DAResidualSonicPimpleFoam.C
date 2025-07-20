@@ -162,12 +162,26 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
     rhoRes_ = rhoEqn & rho_;
 
     // Momentum equation with compressible effects and shock capturing
-    volScalarField muEff("muEff", daTurb_.muEff());
+    volScalarField muEff("muEff", daTurb_.nuEff() * rho_);
     
     // Add artificial viscosity for shock capturing
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = mesh_.V();
+        volScalarField cellVolume = volScalarField(
+            IOobject(
+                "cellVolume",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE),
+            mesh_,
+            dimensionedScalar("zero", dimVolume, 0.0));
+        
+        forAll(cellVolume, cellI)
+        {
+            cellVolume[cellI] = mesh_.V()[cellI];
+        }
+        
         volScalarField cellSize = pow(cellVolume, 1.0/3.0);
         volScalarField artificialViscosity = 
             artificialViscosityCoeff_ * shockSensor_ * cellSize * rho_ * mag(U_);
@@ -190,17 +204,34 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
     // Add artificial thermal diffusivity for shock capturing
     if (shockCapturingScheme_ == "artificialViscosity")
     {
-        volScalarField cellVolume = mesh_.V();
+        volScalarField cellVolume = volScalarField(
+            IOobject(
+                "cellVolume2",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE),
+            mesh_,
+            dimensionedScalar("zero", dimVolume, 0.0));
+        
+        forAll(cellVolume, cellI)
+        {
+            cellVolume[cellI] = mesh_.V()[cellI];
+        }
+        
         volScalarField cellSize = pow(cellVolume, 1.0/3.0);
         volScalarField artificialAlpha = 
             artificialViscosityCoeff_ * shockSensor_ * cellSize * rho_ * mag(U_) * thermo_.Cp();
         alphaEff += artificialAlpha;
     }
 
+    // Calculate kinetic energy terms separately
+    volScalarField rhoKE = rho_ * 0.5 * magSqr(U_);
+    
     fvScalarMatrix EEqn(
         fvm::ddt(rho_, he)
       + fvm::div(phi_, he, divTScheme)
-      + fvc::ddt(rho_, 0.5*magSqr(U_))
+      + fvc::ddt(rhoKE)
       + fvc::div(phi_, 0.5*magSqr(U_))
       + (
             he.name() == "e"
@@ -231,7 +262,7 @@ void DAResidualSonicPimpleFoam::calcResiduals(const dictionary& options)
 
     fvScalarMatrix pEqn(
         fvm::ddt(psi, p_)
-      + fvm::div(phiHbyA, divPhiScheme)
+      + fvc::div(phiHbyA)
       - fvm::laplacian(rho_*rAU, p_)
     );
 
@@ -258,7 +289,7 @@ void DAResidualSonicPimpleFoam::updateIntermediateVariables()
     thermo_.correct();
 
     // update turbulence variables
-    daTurb_.correct();
+    daTurb_.correct(0);
 }
 
 void DAResidualSonicPimpleFoam::correctBoundaryConditions()
@@ -279,20 +310,16 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
 {
     /*
     Description:
-        Calculate the preconditioner matrix dRdW for compressible flow.
-        This is a simplified diagonal preconditioning approach.
+        Calculate the preconditioner matrix dRdW for compressible supersonic flow.
+        This includes proper momentum, pressure, density, and energy coupling.
     */
 
     const labelList& owner = mesh_.owner();
     const labelList& neighbour = mesh_.neighbour();
-
-    PetscScalar val = 0.0;
-    
-    // Get scaling factors from normalization
     const dictionary& allOptions = daOption_.getAllOptions();
-    const dictionary& normStateDict = allOptions.subDict("normalizeStates");
     const dictionary& normResDict = allOptions.subDict("normalizeResiduals");
     
+    PetscScalar val = 0.0;
     scalar UScaling = 1.0;
     scalar pScaling = 1.0;
     scalar rhoScaling = 1.0;
@@ -305,99 +332,198 @@ void DAResidualSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     scalar TResScaling = 1.0;
     scalar phiResScaling = 1.0;
 
-    if (normStateDict.found("U"))
+    // Get normalization factors
+    if (allOptions.found("normalizeStates"))
     {
-        UScaling = normStateDict.getScalar("U");
-    }
-    if (normStateDict.found("p"))
-    {
-        pScaling = normStateDict.getScalar("p");
-    }
-    if (normStateDict.found("rho"))
-    {
-        rhoScaling = normStateDict.getScalar("rho");
-    }
-    if (normStateDict.found("T"))
-    {
-        TScaling = normStateDict.getScalar("T");
-    }
-    if (normStateDict.found("phi"))
-    {
-        phiScaling = normStateDict.getScalar("phi");
+        const dictionary& normStateDict = allOptions.subDict("normalizeStates");
+        if (normStateDict.found("U")) UScaling = normStateDict.getScalar("U");
+        if (normStateDict.found("p")) pScaling = normStateDict.getScalar("p");
+        if (normStateDict.found("rho")) rhoScaling = normStateDict.getScalar("rho");
+        if (normStateDict.found("T")) TScaling = normStateDict.getScalar("T");
+        if (normStateDict.found("phi")) phiScaling = normStateDict.getScalar("phi");
     }
 
-    // Calculate simplified diagonal preconditioner entries
-    // This is a basic implementation - could be enhanced with coupling terms
+    // ******** Momentum equation matrix (URes) **********
+    volScalarField muEff("muEff", daTurb_.nuEff() * rho_);
+    
+    // Add artificial viscosity for shock capturing
+    if (shockCapturingScheme_ == "artificialViscosity")
+    {
+        volScalarField cellVolume = volScalarField(
+            IOobject("cellVolume", mesh_.time().timeName(), mesh_, IOobject::NO_READ, IOobject::NO_WRITE),
+            mesh_, dimensionedScalar("zero", dimVolume, 0.0));
+        forAll(cellVolume, cellI) { cellVolume[cellI] = mesh_.V()[cellI]; }
+        
+        volScalarField cellSize = pow(cellVolume, 1.0/3.0);
+        muEff += artificialViscosityCoeff_ * shockSensor_ * cellSize * rho_ * mag(U_);
+    }
 
-    // U diagonal entries
+    fvVectorMatrix UEqn(
+        fvm::ddt(rho_, U_)
+      + fvm::div(phi_, U_, "div(pc)")
+      + daTurb_.divDevRhoReff(U_)
+      - fvSource_);
+    UEqn.relax(1.0);
+
+    // Set diagonal entries for momentum
     forAll(U_, cellI)
     {
-        if (normResDict.found("URes"))
-        {
-            UResScaling = mesh_.V()[cellI];
-        }
+        if (normResDict.found("URes")) UResScaling = mesh_.V()[cellI];
         for (label i = 0; i < 3; i++)
         {
             PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("U", cellI, i);
             PetscInt colI = rowI;
-            scalar val1 = 1.0 * UScaling / UResScaling;  // Simplified diagonal
+            scalarField D = UEqn.D();
+            scalar val1 = D[cellI] * UScaling / UResScaling;
             assignValueCheckAD(val, val1);
             MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
         }
     }
 
-    // p diagonal entries
+    // Set off-diagonal entries for momentum
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
+    {
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("URes")) UResScaling = mesh_.V()[neighbourCellI];
+
+        for (label i = 0; i < 3; i++)
+        {
+            PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("U", neighbourCellI, i);
+            PetscInt colI = daIndex_.getGlobalAdjointStateIndex("U", ownerCellI, i);
+            scalar val1 = UEqn.lower()[faceI] * UScaling / UResScaling;
+            assignValueCheckAD(val, val1);
+            MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
+        }
+    }
+
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
+    {
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("URes")) UResScaling = mesh_.V()[ownerCellI];
+
+        for (label i = 0; i < 3; i++)
+        {
+            PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("U", ownerCellI, i);
+            PetscInt colI = daIndex_.getGlobalAdjointStateIndex("U", neighbourCellI, i);
+            scalar val1 = UEqn.upper()[faceI] * UScaling / UResScaling;
+            assignValueCheckAD(val, val1);
+            MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
+        }
+    }
+
+    // ******** Pressure equation matrix (pRes) **********
+    volScalarField rAU(1.0/UEqn.A());
+    volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U_, p_));
+    surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_)*fvc::flux(HbyA));
+    surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_*rAU));
+
+    fvScalarMatrix pEqn(
+        fvm::ddt(thermo_.psi(), p_)
+      + fvc::div(phiHbyA)
+      - fvm::laplacian(rhorAUf, p_));
+
+    // Set diagonal entries for pressure
     forAll(p_, cellI)
     {
-        if (normResDict.found("pRes"))
-        {
-            pResScaling = mesh_.V()[cellI];
-        }
+        if (normResDict.found("pRes")) pResScaling = mesh_.V()[cellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", cellI);
         PetscInt colI = rowI;
-        scalar val1 = 1.0 * pScaling / pResScaling;  // Simplified diagonal
+        scalarField D = pEqn.D();
+        scalar val1 = D[cellI] * pScaling / pResScaling;
         assignValueCheckAD(val, val1);
         MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
     }
 
-    // rho diagonal entries
-    forAll(rho_, cellI)
+    // Set off-diagonal entries for pressure
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
     {
-        if (normResDict.found("rhoRes"))
-        {
-            rhoResScaling = mesh_.V()[cellI];
-        }
-        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("rho", cellI);
-        PetscInt colI = rowI;
-        scalar val1 = 1.0 * rhoScaling / rhoResScaling;  // Simplified diagonal
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("pRes")) pResScaling = mesh_.V()[neighbourCellI];
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
+        PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
+        scalar val1 = pEqn.lower()[faceI] * pScaling / pResScaling;
         assignValueCheckAD(val, val1);
-        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+        MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
     }
 
-    // T diagonal entries
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
+    {
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("pRes")) pResScaling = mesh_.V()[ownerCellI];
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
+        PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
+        scalar val1 = pEqn.upper()[faceI] * pScaling / pResScaling;
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
+    }
+
+    // ******** Energy/Temperature equation matrix (TRes) **********
+    volScalarField& he = thermo_.he();
+    volScalarField alphaEff("alphaEff", daTurb_.alphaEff());
+    
+    // Add artificial thermal diffusivity
+    if (shockCapturingScheme_ == "artificialViscosity")
+    {
+        volScalarField cellVolume = volScalarField(
+            IOobject("cellVolume2", mesh_.time().timeName(), mesh_, IOobject::NO_READ, IOobject::NO_WRITE),
+            mesh_, dimensionedScalar("zero", dimVolume, 0.0));
+        forAll(cellVolume, cellI) { cellVolume[cellI] = mesh_.V()[cellI]; }
+        
+        volScalarField cellSize = pow(cellVolume, 1.0/3.0);
+        alphaEff += artificialViscosityCoeff_ * shockSensor_ * cellSize * rho_ * mag(U_) * thermo_.Cp();
+    }
+
+    volScalarField rhoKE = rho_ * 0.5 * magSqr(U_);
+    
+    fvScalarMatrix EEqn(
+        fvm::ddt(rho_, he)
+      + fvm::div(phi_, he, "div(pc)")
+      + fvc::ddt(rhoKE)
+      + fvc::div(phi_, 0.5*magSqr(U_))
+      - fvm::laplacian(alphaEff, he)
+      - fvSourceEnergy_);
+
+    // Set diagonal entries for energy/temperature
     forAll(T_, cellI)
     {
-        if (normResDict.found("TRes"))
-        {
-            TResScaling = mesh_.V()[cellI];
-        }
+        if (normResDict.found("TRes")) TResScaling = mesh_.V()[cellI];
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("T", cellI);
         PetscInt colI = rowI;
-        scalar val1 = 1.0 * TScaling / TResScaling;  // Simplified diagonal
+        scalarField D = EEqn.D();
+        scalar val1 = D[cellI] * TScaling / TResScaling;
         assignValueCheckAD(val, val1);
         MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
     }
 
-    // phi diagonal entries
+    // ******** Density equation matrix (rhoRes) **********
+    fvScalarMatrix rhoEqn(fvm::ddt(rho_) + fvc::div(phi_));
+
+    forAll(rho_, cellI)
+    {
+        if (normResDict.found("rhoRes")) rhoResScaling = mesh_.V()[cellI];
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("rho", cellI);
+        PetscInt colI = rowI;
+        scalarField D = rhoEqn.D();
+        scalar val1 = D[cellI] * rhoScaling / rhoResScaling;
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
+
+    // ******** Flux equation (phiRes) - simplified diagonal **********
     forAll(phi_, faceI)
     {
-        if (normResDict.found("phiRes"))
-        {
-            phiResScaling = 1.0;
-        }
+        if (normResDict.found("phiRes")) phiResScaling = 1.0;
         PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("phi", faceI);
         PetscInt colI = rowI;
-        scalar val1 = 1.0 * phiScaling / phiResScaling;  // Simplified diagonal
+        scalar val1 = 1.0 * phiScaling / phiResScaling;
         assignValueCheckAD(val, val1);
         MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
     }
@@ -407,40 +533,111 @@ void DAResidualSonicPimpleFoam::calcShockSensor()
 {
     /*
     Description:
-        Calculate shock sensor based on pressure gradient magnitude
+        Calculate advanced shock sensor for supersonic flows using multiple indicators:
+        1. Pressure gradient magnitude (primary indicator)
+        2. Velocity divergence (expansion/compression detection)
+        3. Density gradient (density jumps across shocks)
+        4. Mach number gradient (transonic/supersonic transitions)
     */
     
-    // Calculate pressure gradient magnitude
+    // Primary shock indicator: normalized pressure gradient
     volVectorField gradP = fvc::grad(p_);
     volScalarField magGradP = mag(gradP);
+    volScalarField pressureIndicator = magGradP / 
+        (p_ + dimensionedScalar("small", p_.dimensions(), SMALL));
     
-    // Normalize by local pressure to get relative gradient
-    volScalarField relativeGradP = magGradP / (p_ + dimensionedScalar("small", p_.dimensions(), SMALL));
+    // Secondary indicator: velocity divergence (detects expansion fans and compression)
+    volScalarField divU = fvc::div(U_);
+    volScalarField compressionIndicator = mag(divU) * mag(U_) / 
+        (mag(U_) + dimensionedScalar("smallU", U_.dimensions(), SMALL));
     
-    // Apply simple averaging to smooth oscillations (instead of fvc::smooth)
-    shockSensor_ = relativeGradP;
+    // Tertiary indicator: density gradient (captures density jumps)
+    volVectorField gradRho = fvc::grad(rho_);
+    volScalarField magGradRho = mag(gradRho);
+    volScalarField densityIndicator = magGradRho / 
+        (rho_ + dimensionedScalar("smallRho", rho_.dimensions(), SMALL));
     
-    // Apply a simple 3x3 cell averaging for smoothing
-    forAll(shockSensor_, cellI)
+    // Quaternary indicator: Mach number gradient for transonic regions
+    volScalarField c = sqrt(thermo_.Cp()/thermo_.Cv() * p_ / rho_); // Speed of sound
+    volScalarField Mach = mag(U_) / c;
+    volVectorField gradMach = fvc::grad(Mach);
+    volScalarField machIndicator = mag(gradMach);
+    
+    // Combine indicators with weighted average
+    // Higher weights for primary indicators in supersonic flows
+    scalar wP = 0.5;    // Pressure gradient weight
+    scalar wDiv = 0.2;  // Velocity divergence weight  
+    scalar wRho = 0.2;  // Density gradient weight
+    scalar wMach = 0.1; // Mach gradient weight
+    
+    volScalarField combinedSensor = 
+        wP * pressureIndicator + 
+        wDiv * compressionIndicator + 
+        wRho * densityIndicator + 
+        wMach * machIndicator;
+    
+    // Apply advanced multi-pass smoothing to reduce numerical noise
+    // Pass 1: Weighted average with immediate neighbors
+    volScalarField smoothedSensor = combinedSensor;
+    forAll(smoothedSensor, cellI)
     {
-        scalar avgSensor = relativeGradP[cellI];
-        label nNeighbors = 1;
+        scalar weightedSum = combinedSensor[cellI];
+        scalar totalWeight = 1.0;
         
         const labelList& cellCells = mesh_.cellCells()[cellI];
         forAll(cellCells, neighborI)
         {
-            avgSensor += relativeGradP[cellCells[neighborI]];
-            nNeighbors++;
+            label neighCellI = cellCells[neighborI];
+            scalar weight = 0.5; // Neighbor weight
+            weightedSum += weight * combinedSensor[neighCellI];
+            totalWeight += weight;
         }
         
-        shockSensor_[cellI] = avgSensor / nNeighbors;
+        smoothedSensor[cellI] = weightedSum / totalWeight;
+    }
+    
+    // Pass 2: Apply TVD limiter to prevent spurious oscillations
+    forAll(smoothedSensor, cellI)
+    {
+        scalar sensorValue = smoothedSensor[cellI];
+        scalar maxNeighbor = sensorValue;
+        scalar minNeighbor = sensorValue;
+        
+        const labelList& cellCells = mesh_.cellCells()[cellI];
+        forAll(cellCells, neighborI)
+        {
+            label neighCellI = cellCells[neighborI];
+            maxNeighbor = max(maxNeighbor, smoothedSensor[neighCellI]);
+            minNeighbor = min(minNeighbor, smoothedSensor[neighCellI]);
+        }
+        
+        // TVD limiting: constrain sensor between min and max of neighbors
+        scalar limitedValue = max(minNeighbor, min(maxNeighbor, sensorValue));
+        smoothedSensor[cellI] = limitedValue;
     }
     
     // Update boundary conditions
-    shockSensor_.correctBoundaryConditions();
+    smoothedSensor.correctBoundaryConditions();
     
-    // Limit shock sensor to reasonable values
-    shockSensor_ = min(shockSensor_, dimensionedScalar("maxSensor", dimless, 10.0));
+    // Apply nonlinear scaling to enhance shock detection
+    // Use tanh function for smooth activation near shocks
+    scalar threshold = 0.1; // Threshold for shock detection
+    scalar steepness = 10.0; // Steepness of activation function
+    
+    forAll(shockSensor_, cellI)
+    {
+        scalar rawSensor = smoothedSensor[cellI];
+        // Smooth step function: 0.5 * (1 + tanh(steepness * (sensor - threshold)))
+        scalar activatedSensor = 0.5 * (1.0 + tanh(steepness * (rawSensor - threshold)));
+        shockSensor_[cellI] = activatedSensor;
+    }
+    
+    // Final bounds to ensure physical values
+    shockSensor_ = max(shockSensor_, dimensionedScalar("minSensor", dimless, 0.0));
+    shockSensor_ = min(shockSensor_, dimensionedScalar("maxSensor", dimless, 1.0));
+    
+    // Update boundary conditions one final time
+    shockSensor_.correctBoundaryConditions();
 }
 
 void DAResidualSonicPimpleFoam::applyArtificialViscosity()

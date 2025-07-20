@@ -68,7 +68,20 @@ rho = pThermo.rho();
 rho = max(rho, dimensionedScalar("rhoMin", rho.dimensions(), 1e-8));
 
 // Calculate and report compressible continuity error
-#include "compressibleContinuityErrors.H"
+// Calculate and report compressible continuity error
+{
+    scalar sumLocalContErr = (fvc::ddt(rho) + fvc::div(phi)).weightedAverage(mesh.V()).value();
+    scalar globalContErr = runTime.deltaTValue() * sumLocalContErr;
+    cumulativeContErr_ += globalContErr;
+    
+    if (printToScreen_)
+    {
+        Info << "time step continuity errors : sum local = " << sumLocalContErr
+             << ", global = " << globalContErr
+             << ", cumulative = " << cumulativeContErr_
+             << endl;
+    }
+}
 
 // Bound pressure to avoid negative values
 p = max(p, pMin);

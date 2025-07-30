@@ -53,3 +53,6 @@ turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 
 Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
+
+
+#include "createMRF.H"

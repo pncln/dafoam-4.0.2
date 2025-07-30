@@ -6,14 +6,12 @@ if (hasFvSource_)
     daFvSourcePtr_->calcFvSource(fvSource);
 }
 
-fvVectorMatrix UEqn
-(
+tmp<fvVectorMatrix> tUEqn(
     fvm::ddt(rho, U)
-  + fvm::div(phi, U)
-  + turbulencePtr_->divDevRhoReff(U)
- ==
-    fvSource
-);
+    + fvm::div(phi, U)
+    + turbulencePtr_->divDevRhoReff(U)
+    - fvSource);
+fvVectorMatrix& UEqn = tUEqn.ref();
 
 UEqn.relax();
 

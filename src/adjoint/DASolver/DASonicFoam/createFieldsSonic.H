@@ -52,16 +52,3 @@ turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 
 Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
-
-Info << "Creating rAU\n" << endl;
-fvVectorMatrix UEqn(fvm::ddt(rho, U) + fvm::div(phi, U) + turbulencePtr_->divDevRhoReff(U));
-volScalarField rAU(1.0 / UEqn.A());
-
-Info << "Creating HbyA\n" << endl;
-volVectorField HbyA("HbyA", rAU * UEqn.H());
-
-Info << "Creating rhorAUf\n" << endl;
-surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho * rAU));
-
-Info << "Creating phid\n" << endl;
-surfaceScalarField phid("phid", fvc::interpolate(thermo.psi()) * fvc::flux(HbyA));

@@ -1,9 +1,9 @@
 rho = thermo.rho();
-volVectorField HbyA("HbyA", U);
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);
 rho.relax();
 
 volScalarField rAU(1.0/UEqn.A());
+volVectorField HbyA("HbyA", rAU * UEqn.H());
 surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
 surfaceScalarField phid
 

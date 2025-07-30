@@ -11,20 +11,20 @@ FoamFile
     format      ascii;
     class       volScalarField;
     location    "0";
-    object      T;
+    object      rho;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 1 0 0 0];
+dimensions      [1 -3 0 0 0 0 0];
 
-internalField   uniform 300;
+internalField   uniform 1.177;
 
 boundaryField
 {
     cylinder
     {
-        type            fixedValue;
-        value           uniform 300;
+        type            calculated;
+        value           uniform 1.177;
     }
     symmetry1
     {
@@ -36,8 +36,8 @@ boundaryField
     }
     inout
     {
-        type            fixedValue;
-        value           uniform 300;
+        type            calculated;
+        value           uniform 1.177;
     }
 }
 

@@ -1,32 +1,35 @@
 /*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
 
-    DAFoam  : Discrete Adjoint with OpenFOAM
-    Version : v4
+    OpenFOAM is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    Description:
-        Child class for DASonicFoam
-    
-    This class is modified from OpenFOAM's source code
-    applications/solvers/compressible/sonicFoam
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
 
-    OpenFOAM: The Open Source CFD Toolbox
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright (C): 2011-2016 OpenFOAM Foundation
+Application
+    sonicFoam
 
-    OpenFOAM License:
+Group
+    grpCompressibleSolvers
 
-        OpenFOAM is free software: you can redistribute it and/or modify it
-        under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-    
-        OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
-        ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-        FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-        for more details.
-    
-        You should have received a copy of the GNU General Public License
-        along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+Description
+    Transient solver for trans-sonic/supersonic, turbulent flow of a
+    compressible gas.
 
 \*---------------------------------------------------------------------------*/
 
@@ -41,7 +44,6 @@
 #include "DAFvSource.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace Foam
 {
 
@@ -54,7 +56,7 @@ class DASonicFoam
 {
 
 protected:
-    /// pimple pointer
+    /// simple pointer
     autoPtr<pimpleControlDF> pimplePtr_;
 
     /// thermal model
@@ -65,15 +67,15 @@ protected:
 
     /// density field pointer
     autoPtr<volScalarField> rhoPtr_;
+	
+	/// internal energy pointer
+	autoPtr<volScalarField> ePtr_;
 
     /// velocity field pointer
     autoPtr<volVectorField> UPtr_;
 
     /// surface flux field pointer
     autoPtr<surfaceScalarField> phiPtr_;
-
-    /// pressure time deriv pointer
-    autoPtr<volScalarField> dpdtPtr_;
 
     /// kinetic energy pointer
     autoPtr<volScalarField> KPtr_;

@@ -1,36 +1,41 @@
 /*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
 
-    DAFoam  : Discrete Adjoint with OpenFOAM
-    Version : v4
+    OpenFOAM is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    This class is modified from OpenFOAM's source code
-    applications/solvers/compressible/sonicFoam
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
 
-    OpenFOAM: The Open Source CFD Toolbox
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright (C): 2011-2016 OpenFOAM Foundation
+Application
+    sonicFoam
 
-    OpenFOAM License:
+Group
+    grpCompressibleSolvers
 
-        OpenFOAM is free software: you can redistribute it and/or modify it
-        under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-    
-        OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
-        ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-        FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-        for more details.
-    
-        You should have received a copy of the GNU General Public License
-        along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+Description
+    Transient solver for trans-sonic/supersonic, turbulent flow of a
+    compressible gas.
 
 \*---------------------------------------------------------------------------*/
 
 #include "DASonicFoam.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace Foam
 {
 
@@ -44,11 +49,10 @@ DASonicFoam::DASonicFoam(
     : DASolver(argsAll, pyOptions),
       pimplePtr_(nullptr),
       pThermoPtr_(nullptr),
-      pPtr_(nullptr),
+      pPtr_(nullptr),				// check thisssss!!!!!!!!!!!!!! //
       rhoPtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
-      dpdtPtr_(nullptr),
       KPtr_(nullptr),
       turbulencePtr_(nullptr),
       daTurbulenceModelPtr_(nullptr),
@@ -89,6 +93,7 @@ void DASonicFoam::initSolver()
 
 #include "createAdjoint.H"
 
+
     // initialize fvSource and compute the source term
     const dictionary& allOptions = daOptionPtr_->getAllOptions();
     if (allOptions.subDict("fvSource").toc().size() != 0)
@@ -121,17 +126,15 @@ label DASonicFoam::solvePrimal()
         Call the primal solver to get converged state variables
     */
 
-#include "createRefsSonic.H"
+    #include "createRefsSonic.H"
 
-    // call correctNut, this is equivalent to turbulence->validate();
     daTurbulenceModelPtr_->updateIntermediateVariables();
 
-    Info << "\nStarting time loop\n"
-         << endl;
+    Info << "\nStarting time loop\n" << endl;
 
     label pimplePrintToScreen = 0;
 
-    // we need to reduce the number of files written to the disk to minimize the file IO load
+    // reduce disk writes during adjoint run
     label reduceIO = daOptionPtr_->getAllOptions().subDict("unsteadyAdjoint").getLabel("reduceIO");
     wordList additionalOutput;
     if (reduceIO)
@@ -143,7 +146,6 @@ label DASonicFoam::solvePrimal()
     scalar deltaT = runTime.deltaT().value();
     label nInstances = round(endTime / deltaT);
 
-    // main loop
     label regModelFail = 0;
     label fail = 0;
 
@@ -151,26 +153,16 @@ label DASonicFoam::solvePrimal()
     {
         ++runTime;
 
-        // if we have unsteadyField in inputInfo, assign GlobalVar::inputFieldUnsteady to OF fields at each time step
-        this->updateInputFieldUnsteady();
-
         printToScreen_ = this->isPrintTime(runTime, printIntervalUnsteady_);
 
         if (printToScreen_)
         {
             Info << "Time = " << runTime.timeName() << nl << endl;
-#include "CourantNo.H"
+            #include "compressibleCourantNo.H"
         }
 
-        if (pimple.nCorrPIMPLE() <= 1)
-        {
-#include "rhoEqnSonic.H"
-        }
-
-        // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-
             if (pimple.finalIter() && printToScreen_)
             {
                 pimplePrintToScreen = 1;
@@ -180,28 +172,22 @@ label DASonicFoam::solvePrimal()
                 pimplePrintToScreen = 0;
             }
 
-            // Pressure-velocity PIMPLE corrector
-#include "UEqnSonic.H"
-#include "EEqnSonic.H"
-            // --- Pressure corrector loop
+            #include "UEqnSonic.H"
+            #include "EEqnSonic.H"
+
             while (pimple.correct())
             {
-#include "pEqnSonic.H"
+                #include "pEqnSonic.H"
             }
 
             daTurbulenceModelPtr_->correct(pimplePrintToScreen);
-
-            // update the output field value at each iteration, if the regression model is active
             fail = daRegressionPtr_->compute();
         }
-
-        rho = thermo.rho();
 
         regModelFail += fail;
 
         if (this->validateStates())
         {
-            // write data to files and quit
             runTime.writeNow();
             mesh.write();
             return 1;
@@ -229,18 +215,13 @@ label DASonicFoam::solvePrimal()
         return 1;
     }
 
-    // need to save primalFinalTimeIndex_.
     primalFinalTimeIndex_ = runTime.timeIndex();
-
-    // write the mesh to files
     mesh.write();
 
-    Info << "End\n"
-         << endl;
+    Info << "End\n" << endl;
 
     return 0;
 }
-
 } // End namespace Foam
 
 // ************************************************************************* //

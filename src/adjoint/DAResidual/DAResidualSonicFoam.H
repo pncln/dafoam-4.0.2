@@ -4,7 +4,7 @@
     Version : v4
 
     Description:
-        Child class for DASonicFoam
+        Child class for DASonic
 
 \*---------------------------------------------------------------------------*/
 
@@ -42,13 +42,11 @@ protected:
     volScalarField& p_;
     volScalarField pRes_;
 
-    volScalarField& e_;
-    volScalarField eRes_;
+    volScalarField& T_;
+    volScalarField TRes_;
 
     surfaceScalarField& phi_;
     surfaceScalarField phiRes_;
-
-    volScalarField rhoRes_;
     //@}
 
     /// fvSource term
@@ -62,10 +60,11 @@ protected:
 
     /// \name These are intermediate variables
     //@{
+    volScalarField& e_;
     volScalarField& rho_;
     volScalarField& alphat_;
     volScalarField& psi_;
-    volScalarField& dpdt_;
+    // volScalarField& dpdt_;
     volScalarField& K_;
     //@}
 

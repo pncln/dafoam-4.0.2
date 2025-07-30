@@ -38,8 +38,7 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     */
 
     stateInfo_["volScalarStates"].append("p");
-    stateInfo_["volScalarStates"].append("e");  // Internal energy for sonicFoam
-    stateInfo_["volScalarStates"].append("rho");  // Density - solved in original sonicFoam
+    stateInfo_["volScalarStates"].append("T");
     stateInfo_["modelStates"].append("nut");
     stateInfo_["volVectorStates"].append("U");
     stateInfo_["surfaceScalarStates"].append("phi");
@@ -52,12 +51,11 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
         Adjoint state connectivity info, numbers denote the level of connectivity
         N/A means this state does not connect to the corrsponding residual 
     
-                     U      e      p     rho    nut    phi
-        URes         2      2      1      1      1      0
-        ERes         2      2      2      2      1      0
-        rhoRes       2      1      1      2      1      0
-        pRes         3      2      2      2      2      1
-        phiRes       2      2      1      1      1      0
+                     U      T      p     nut    phi
+        URes         2      2      1      1      0
+        TRes         2      2      2      1      0
+        pRes         3      2      2      2      1
+        phiRes       2      2      1      1      0
     
         ******************************** NOTE 1 **********************************
         One does not need to specify connectivity for each physical model, set the 
@@ -81,48 +79,39 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     stateResConInfo_.set(
         "URes",
         {
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv0
-            {"U", "p", "e", "rho", "nut"}, // lv1
-            {"U", "e"} // lv2
+            {"U", "p", "T", "nut", "phi"}, // lv0
+            {"U", "p", "T", "nut"}, // lv1
+            {"U", "T"} // lv2
         });
 
     stateResConInfo_.set(
-        "ERes",
+        "TRes",
         {
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv0
-            {"U", "p", "e", "rho", "nut"}, // lv1
-            {"U", "p", "e"} // lv2
-        });
-
-    stateResConInfo_.set(
-        "rhoRes",
-        {
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv0
-            {"U", "rho", "nut"}, // lv1
-            {"rho"} // lv2
+            {"U", "p", "T", "nut", "phi"}, // lv0
+            {"U", "p", "T", "nut"}, // lv1
+            {"U", "p", "T"} // lv2
         });
 
     stateResConInfo_.set(
         "pRes",
         {
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv0
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv1
-            {"U", "p", "e", "rho", "nut"}, // lv2
+            {"U", "p", "T", "nut", "phi"}, // lv0
+            {"U", "p", "T", "nut", "phi"}, // lv1
+            {"U", "p", "T", "nut"}, // lv2
             {"U"} // lv3
         });
 
     stateResConInfo_.set(
         "phiRes",
         {
-            {"U", "p", "e", "rho", "nut", "phi"}, // lv0
-            {"U", "p", "e", "rho", "nut"}, // lv1
-            {"U", "e"}, // lv2
+            {"U", "p", "T", "nut", "phi"}, // lv0
+            {"U", "p", "T", "nut"}, // lv1
+            {"U", "T"}, // lv2
         });
 
     // need to correct connectivity for physical models for each residual
     daModel.correctStateResidualModelCon(stateResConInfo_["URes"]);
-    daModel.correctStateResidualModelCon(stateResConInfo_["ERes"]);
-    daModel.correctStateResidualModelCon(stateResConInfo_["rhoRes"]);
+    daModel.correctStateResidualModelCon(stateResConInfo_["TRes"]);
     daModel.correctStateResidualModelCon(stateResConInfo_["pRes"]);
     daModel.correctStateResidualModelCon(stateResConInfo_["phiRes"]);
 

@@ -5,14 +5,15 @@ fvMesh& mesh = meshPtr_();
 pimpleControlDF& pimple = pimplePtr_();
 psiThermo& thermo = pThermoPtr_();
 volScalarField& p = thermo.p();
-volScalarField& e = thermo.he();  // Internal energy for sonicFoam
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
 surfaceScalarField& phi = phiPtr_();
-volScalarField& dpdt = dpdtPtr_();
 volScalarField& K = KPtr_();
+volScalarField& e = ePtr_();
+compressible::turbulenceModel& turbulence = turbulencePtr_();
 scalar& cumulativeContErr = cumulativeContErr_;
 const volScalarField& psi = thermo.psi();
 const dictionary& allOptions = daOptionPtr_->getAllOptions();
 volVectorField& fvSource = fvSourcePtr_();
 volScalarField& fvSourceEnergy = fvSourceEnergyPtr_();
+fv::options fvOptions(mesh);

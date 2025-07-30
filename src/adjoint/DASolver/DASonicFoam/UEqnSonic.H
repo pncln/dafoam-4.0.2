@@ -5,13 +5,16 @@ if (hasFvSource_)
 {
     daFvSourcePtr_->calcFvSource(fvSource);
 }
-fvVectorMatrix UEqn(
+
+fvVectorMatrix UEqn
+(
     fvm::ddt(rho, U)
-    + fvm::div(phi, U)
-    + turbulencePtr_->divDevRhoReff(U)
+  + fvm::div(phi, U)
+  + turbulencePtr_->divDevRhoReff(U)
  ==
-    fvSource);
-				
+    fvSource
+);
+
 UEqn.relax();
 
 // get the solver performance info such as initial

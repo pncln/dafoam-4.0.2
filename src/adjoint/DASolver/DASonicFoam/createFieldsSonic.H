@@ -54,7 +54,7 @@ Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 
 Info << "Creating rAU\n" << endl;
-fvVectorMatrix UEqn(fvm::div(phi, U) + turbulencePtr_->divDevRhoReff(U));
+fvVectorMatrix UEqn(fvm::ddt(rho, U) + fvm::div(phi, U) + turbulencePtr_->divDevRhoReff(U));
 volScalarField rAU(1.0 / UEqn.A());
 
 Info << "Creating HbyA\n" << endl;

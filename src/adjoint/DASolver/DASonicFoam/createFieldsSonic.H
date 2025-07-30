@@ -30,6 +30,7 @@ ePtr_.reset(new volScalarField(
 // Create phi from compressibleCreatePhi.H
 #include "compressibleCreatePhi.H"
 // surfaceScalarField phi is created here
+phiPtr_.reset(new surfaceScalarField(phi));
 
 // actuator related stuff
 Info << "Creating source term. " << endl;

@@ -42,6 +42,7 @@ Description
 #include "turbulentFluidThermoModel.H"
 #include "pimpleControlDF.H"
 #include "DAFvSource.H"
+#include "IOMRFZoneListDF.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 namespace Foam

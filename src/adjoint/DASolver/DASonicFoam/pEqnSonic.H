@@ -1,6 +1,6 @@
 rho = thermo.rho();
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);
-// rho.relax();
+rho.relax();
 
 volScalarField rAU(1.0/UEqn.A());
 volVectorField HbyA("HbyA", rAU * UEqn.H());
@@ -9,15 +9,15 @@ surfaceScalarField phid
 
 (
     "phid",
-    fvc::interpolate(psi)
-	// fvc::interpolate(thermo.psi())
+    // fvc::interpolate(psi)
+	fvc::interpolate(thermo.psi())
 
    *(
         fvc::flux(HbyA)
-      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+      // + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
-MRF.makeRelative(fvc::interpolate(psi), phid);
+// MRF.makeRelative(fvc::interpolate(psi), phid);
 
 // Non-orthogonal pressure corrector loop
 while (pimple.correctNonOrthogonal())
@@ -39,7 +39,7 @@ while (pimple.correctNonOrthogonal())
     }
 }
 
-#include "rhoEqn.H"
+// #include "rhoEqn.H"
 #include "compressibleContinuityErrs.H"
 
 U = HbyA - rAU*fvc::grad(p);

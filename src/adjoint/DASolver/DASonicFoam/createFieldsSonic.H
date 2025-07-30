@@ -4,7 +4,11 @@ pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
 thermo.validate(args.executable(), "e");
 
-volScalarField& p = thermo.p();
+Info << "Reading field p\n" << endl;
+pPtr_.reset(new volScalarField(
+    IOobject("p", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
+    mesh));
+volScalarField& p = pPtr_();
 
 rhoPtr_.reset(new volScalarField(
     IOobject("rho", runTime.timeName(), mesh, IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),

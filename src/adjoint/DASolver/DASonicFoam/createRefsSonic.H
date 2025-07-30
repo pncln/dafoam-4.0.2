@@ -4,7 +4,7 @@ runTime.setTime(0.0, 0);
 fvMesh& mesh = meshPtr_();
 pimpleControlDF& pimple = pimplePtr_();
 psiThermo& thermo = pThermoPtr_();
-volScalarField& p = thermo.p();
+volScalarField& p = pPtr_();
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
 surfaceScalarField& phi = phiPtr_();

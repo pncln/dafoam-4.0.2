@@ -15,6 +15,11 @@
 		- fvSourceEnergy
     );
 
+    if (MRF.active())
+    {
+        EEqn += fvc::div(MRF.phi(), p);
+    }
+
     EEqn.relax();
 
     // get the solver performance info such as initial

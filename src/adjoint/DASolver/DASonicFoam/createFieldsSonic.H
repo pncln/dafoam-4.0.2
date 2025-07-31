@@ -61,3 +61,4 @@ Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 
 MRFPtr_.reset(new IOMRFZoneListDF(mesh));
+#include "createFvOptions.H"

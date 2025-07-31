@@ -75,15 +75,6 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     /*
     Description:
         This is the function to compute residuals.
-    
-    Input:
-        options.isPC: 1 means computing residuals for preconditioner matrix.
-        This essentially use the first order scheme for div(phi,U), div(phi,e)
-
-        p_, T_, U_, phi_, etc: State variables in OpenFOAM
-    
-    Output:
-        URes_, pRes_, TRes_, phiRes_: residual field variables
     */
 
     label isPC = options.getLabel("isPC");
@@ -139,7 +130,8 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     normalizeResiduals(TRes);
 
     // ******** p Residuals **********
-    fvScalarMatrix UEqnP(
+    // Need to create a separate UEqn for pressure equation
+    fvVectorMatrix UEqnP(
         fvm::ddt(rho_, U_)
         + fvm::div(phi_, U_)
         + daTurb_.divDevRhoReff(U_)
@@ -148,25 +140,30 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     volScalarField rAU(1.0 / UEqnP.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
-    autoPtr<volVectorField> HbyAPtr = nullptr;
+    // Fixed: Create HbyA properly
+    volVectorField HbyA("HbyA", U_);
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
     {
-        HbyAPtr.reset(new volVectorField(constrainHbyA(rAU * UEqnP.H(), U_, p_)));
+        HbyA = constrainHbyA(rAU * UEqnP.H(), U_, p_);
     }
     else
     {
-        HbyAPtr.reset(new volVectorField("HbyA", U_));
-        HbyAPtr() = rAU * UEqnP.H();
+        HbyA = rAU * UEqnP.H();
     }
-    volVectorField& HbyA = HbyAPtr();
 
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
 
+    // Create phid for compressible pressure equation
+    surfaceScalarField phid(
+        "phid",
+        fvc::interpolate(psi_) * phiHbyA
+    );
+
     fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
-        + fvc::div(phiHbyA)
-        - fvm::laplacian(rhorAUf, p_));
+        + fvc::div(phid)
+        - fvm::laplacian(rho_ * rAU, p_));
 
     pRes_ = pEqn & p_;
     normalizeResiduals(pRes);

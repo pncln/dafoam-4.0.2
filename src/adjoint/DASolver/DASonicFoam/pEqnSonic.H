@@ -16,7 +16,7 @@ surfaceScalarField phid
 
    *(
         fvc::flux(HbyA)
-      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+    //   + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
 MRF.makeRelative(fvc::interpolate(thermo.psi()), phid);

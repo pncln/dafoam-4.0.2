@@ -9,15 +9,15 @@ surfaceScalarField phid
 
 (
     "phid",
-    // fvc::interpolate(psi)
-	fvc::interpolate(thermo.psi())
+    fvc::interpolate(psi)
+	// fvc::interpolate(thermo.psi())
 
    *(
         fvc::flux(HbyA)
-      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+    //   + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
-// MRF.makeRelative(fvc::interpolate(psi), phid);
+MRF.makeRelative(fvc::interpolate(psi), phid);
 
 // Non-orthogonal pressure corrector loop
 while (pimple.correctNonOrthogonal())

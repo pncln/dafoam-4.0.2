@@ -29,9 +29,14 @@ volVectorField& U = UPtr_();
 
 Info<< "Creating field internal energy e\n" << endl;
 ePtr_.reset(new volScalarField(
-    IOobject("e", runTime.timeName(), mesh, IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
+    IOobject("e", runTime.timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE),
     mesh,
-    dimensionedScalar("e", dimEnergy/dimMass, 0.0)));
+    dimensionedScalar("e", dimEnergy/dimMass, 214650.0),  // Initial value for air at 300K
+    zeroGradientFvPatchField<scalar>::typeName));
+// Initialize internal energy from thermodynamic state
+// For perfect gas: e = CvT, where Cv = Cp - R = Cp - Cp/gamma
+volScalarField Cv = thermo.Cv();
+ePtr_() = Cv * thermo.T();
 
 // Create phi from compressibleCreatePhi.H
 #include "compressibleCreatePhi.H"
@@ -59,6 +64,9 @@ turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 
 Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
+
+// Ensure thermodynamic consistency
+thermo.correct();
 
 MRFPtr_.reset(new IOMRFZoneListDF(mesh));
 #include "createFvOptions.H"

@@ -40,7 +40,7 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(DASonicFoam, 0);
+// defineTypeNameAndDebug(DASonicFoam, 0);
 addToRunTimeSelectionTable(DASolver, DASonicFoam, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 

@@ -4,12 +4,12 @@
     Version : v4
 
     Description:
-        Child class for DARhoPimpleSonicFoam
+        Child class for DARhoSonicPimpleFoam
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef DAResidualRhoPimpleSonicFoam_H
-#define DAResidualRhoPimpleSonicFoam_H
+#ifndef DAResidualRhoSonicPimpleFoam_H
+#define DAResidualRhoSonicPimpleFoam_H
 
 #include "DAResidual.H"
 #include "addToRunTimeSelectionTable.H"
@@ -25,10 +25,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-      Class DAResidualRhoPimpleSonicFoam Declaration
+      Class DAResidualRhoSonicPimpleFoam Declaration
 \*---------------------------------------------------------------------------*/
 
-class DAResidualRhoPimpleSonicFoam
+class DAResidualRhoSonicPimpleFoam
     : public DAResidual
 {
 
@@ -82,11 +82,11 @@ protected:
     label hasFvSource_ = 0;
 
 public:
-    TypeName("DARhoPimpleSonicFoam");
+    TypeName("DARhoSonicPimpleFoam");
     // Constructors
 
     //- Construct from components
-    DAResidualRhoPimpleSonicFoam(
+    DAResidualRhoSonicPimpleFoam(
         const word modelType,
         const fvMesh& mesh,
         const DAOption& daOption,
@@ -94,7 +94,7 @@ public:
         const DAIndex& daIndex);
 
     //- Destructor
-    virtual ~DAResidualRhoPimpleSonicFoam()
+    virtual ~DAResidualRhoSonicPimpleFoam()
     {
     }
 

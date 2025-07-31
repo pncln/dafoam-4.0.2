@@ -1,4 +1,4 @@
-DAFoam with DASonicPimpleFoam
+DAFoam with DASonicFoam
 ======================================
 Super-sonic sovler for DAFoam
 

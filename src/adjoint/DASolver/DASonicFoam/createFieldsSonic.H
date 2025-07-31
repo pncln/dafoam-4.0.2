@@ -8,11 +8,17 @@ Info << "Reading field p\n" << endl;
 pPtr_.reset(new volScalarField(
     IOobject("p", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
     mesh));
-volScalarField& p = pPtr_();
+volScalarField& p = thermo.p();
 
-rhoPtr_.reset(new volScalarField(
-    IOobject("rho", runTime.timeName(), mesh, IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
-    thermo.rho()));
+rhoPtr_.reset(
+    new volScalarField(
+        IOobject(
+            "rho",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE),
+        thermo.rho()));
 volScalarField& rho = rhoPtr_();
 
 Info << "Reading field U\n" << endl;
@@ -54,5 +60,4 @@ turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 
-
-#include "createMRF.H"
+MRFPtr_.reset(new IOMRFZoneListDF(mesh));

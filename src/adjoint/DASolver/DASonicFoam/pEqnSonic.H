@@ -14,7 +14,7 @@ surfaceScalarField phid
 
    *(
         fvc::flux(HbyA)
-      // + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
 // MRF.makeRelative(fvc::interpolate(psi), phid);
@@ -39,7 +39,7 @@ while (pimple.correctNonOrthogonal())
     }
 }
 
-// #include "rhoEqn.H"
+#include "rhoEqn.H"
 #include "compressibleContinuityErrs.H"
 
 U = HbyA - rAU*fvc::grad(p);

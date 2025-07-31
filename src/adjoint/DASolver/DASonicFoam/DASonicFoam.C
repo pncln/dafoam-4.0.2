@@ -56,6 +56,7 @@ DASonicFoam::DASonicFoam(
       ePtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
+      dpdtPtr_(nullptr),
       KPtr_(nullptr),
       turbulencePtr_(nullptr),
       daTurbulenceModelPtr_(nullptr),

@@ -1,53 +1,51 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v1812                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
+/*--------------------------------*- C++ -*---------------------------------*\ 
+| ========                 |                                                 | 
+| \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           | 
+|  \    /   O peration     | Version:  v1812                                 | 
+|   \  /    A nd           | Web:      www.OpenFOAM.com                      | 
+|    \/     M anipulation  |                                                 | 
+\*--------------------------------------------------------------------------*/ 
 FoamFile
 {
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
     object      fvSolution;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+SIMPLE
+{
+    consistent                         false;
+    nNonOrthogonalCorrectors           0;
+}
 
 solvers
 {
     "(p|p_rgh|G)"
     {
-        solver           GAMG;
-        tolerance        0;
-        relTol           0.001;
-        smoother         GaussSeidel;
-        maxIter          500;
-        minIter          1;
+        
+        solver                         GAMG;
+        smoother                       GaussSeidel;
+        relTol                         0.1;
+        tolerance                      0;
+        maxIter                        20;
     }
-
-    "(p|p_rgh|G)Final"
+    Phi
     {
         $p;
-	    relTol          0;
-        tolerance       1e-8;
+        relTol                         0;
+        tolerance                      1e-6;
+        maxIter                        20;
     }
-
     "(U|T|e|h|nuTilda|k|omega|epsilon)"
     {
-        solver          smoothSolver;
-        smoother        GaussSeidel;
-        tolerance       1e-8;
-        relTol          0;
-        maxIter         50;
-        minIter          1;
-    }
-
-    "(U|T|e|h|nuTilda|k|omega|epsilon)Final"
-    {
-        $U;
-        //relTol          0;
+        solver                         smoothSolver;
+        smoother                       GaussSeidel;
+        relTol                         0.1;
+        tolerance                      0;
+        nSweeps                        1;
+        maxIter                        20;
     }
 }
 
@@ -55,30 +53,18 @@ relaxationFactors
 {
     fields
     {
-         "(p|p_rgh|G)"                   0.3;
+        "(p|p_rgh)"                    0.30;
     }
     equations
     {
-        "(U|T|e|h|nuTilda|k|omega|epsilon)"                   0.7;
+        "(U|T|e|h|nuTilda|k|epsilon|omega)" 0.70;
     }
 }
 
-PIMPLE
+potentialFlow
 {
-    nNonOrthogonalCorrectors 0;
-    nCorrectors         2;
-    nOuterCorrectors 10;
-
-    residualControl
-    {
-        "(U|T|e|h|nuTilda|k|omega|epsilon|p|p_rgh|G)" 
-        {
-            tolerance       1e-8; 
-            relTol          1e-8; 
-        } 
-    }
+    nNonOrthogonalCorrectors           20;
 }
 
 
-
-// ************************************************************************* //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

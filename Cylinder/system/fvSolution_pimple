@@ -17,68 +17,77 @@ FoamFile
 
 solvers
 {
-    "(p|p_rgh|G)"
+    p
     {
-        solver           GAMG;
-        tolerance        0;
-        relTol           0.001;
-        smoother         GaussSeidel;
-        maxIter          500;
-        minIter          1;
+        solver          GAMG;
+        tolerance       1e-06;
+        relTol          0.01;
+        smoother        GaussSeidel;
+        nCellsInCoarsestLevel 20;
     }
 
-    "(p|p_rgh|G)Final"
+    pFinal
     {
         $p;
-	    relTol          0;
-        tolerance       1e-8;
+        relTol          0;
     }
 
-    "(U|T|e|h|nuTilda|k|omega|epsilon)"
+    "(U|e|k|epsilon)"
     {
         solver          smoothSolver;
-        smoother        GaussSeidel;
-        tolerance       1e-8;
-        relTol          0;
-        maxIter         50;
-        minIter          1;
+        smoother        symGaussSeidel;
+        tolerance       1e-05;
+        relTol          0.1;
     }
 
-    "(U|T|e|h|nuTilda|k|omega|epsilon)Final"
+    "(U|e|k|epsilon)Final"
     {
         $U;
-        //relTol          0;
+        relTol          0;
     }
-}
-
-relaxationFactors
-{
-    fields
+    
+    Phi
     {
-         "(p|p_rgh|G)"                   0.3;
-    }
-    equations
-    {
-        "(U|T|e|h|nuTilda|k|omega|epsilon)"                   0.7;
+        solver          GAMG;
+        tolerance       1e-06;
+        relTol          0.01;
+        smoother        GaussSeidel;
+        nCellsInCoarsestLevel 20;
     }
 }
 
 PIMPLE
 {
-    nNonOrthogonalCorrectors 0;
-    nCorrectors         2;
-    nOuterCorrectors 10;
-
-    residualControl
-    {
-        "(U|T|e|h|nuTilda|k|omega|epsilon|p|p_rgh|G)" 
-        {
-            tolerance       1e-8; 
-            relTol          1e-8; 
-        } 
-    }
+    nOuterCorrectors 1;  // 1 for PISO mode
+    nCorrectors      2;
+    nNonOrthogonalCorrectors 1;
+    
+    // Reference for potential flow initialization
+    PhiRefCell      0;
+    PhiRefValue     0;
+    
+    // Reference for pressure if needed
+    pRefCell        0;
+    pRefValue       101325;
 }
 
+potentialFlow
+{
+    nNonOrthogonalCorrectors 10;
+    PhiRefCell      0;
+    PhiRefValue     0;
+}
 
+relaxationFactors
+{
+    equations
+    {
+        p               0.3;
+        U               0.7;
+        e               0.7;
+        k               0.7;
+        epsilon         0.7;
+    }
+}
 
 // ************************************************************************* //

@@ -1,0 +1,280 @@
+#--------------------#
+ Total Nodes:     102 
+ Unique Nodes:    100 
+ Total Faces:      50 
+#--------------------#
+ Normal orientation check ...
+ Normals are consistent!
+ Determining topology ...
+ Topology complete.
+#--------------------#
+Grid Ratio:  1.1935 
+#--------------------#
+#-------------------------------------------------------------------------------------------------------------------#
+# Grid | CPU  | Sub | KSP | nAvg |  Sl  | Sensor | Sensor | Min     | Min     |  deltaS  | March    | cMax  | Ratio |
+# Lvl  | Time | Its | Its |      |      | Max    | Min    | Quality | Volume  |          | Distance |       | kMax  |
+#-------------------------------------------------------------------------------------------------------------------#
+      2    0.0     2    12      0  0.216  1.00000  0.99134  0.99812  0.589E-05  0.712E-03  0.110E-02  0.0095  0.0000 
+      3    0.0     2    12      0  0.247  1.00000  0.98956  0.99783  0.685E-05  0.101E-02  0.266E-02  0.0135  1.1596 
+      4    0.0     1    12      0  0.259  1.00000  0.98818  0.99743  0.814E-05  0.121E-02  0.367E-02  0.0161  1.1864 
+      5    0.0     2    12      0  0.281  1.00000  0.98465  0.99696  0.971E-05  0.170E-02  0.633E-02  0.0228  1.1887 
+      6    0.0     1    12      0  0.291  1.00000  0.98243  0.99639  0.116E-04  0.203E-02  0.803E-02  0.0268  1.1894 
+      7    0.0     1    12      0  0.301  1.00000  0.98015  0.99573  0.138E-04  0.242E-02  0.101E-01  0.0318  1.1892 
+      8    0.0     2    12      0  0.321  1.00000  0.97391  0.99495  0.165E-04  0.289E-02  0.154E-01  0.0450  1.1885 
+      9    0.0     1    12      0  0.329  1.00000  0.96997  0.99403  0.197E-04  0.345E-02  0.183E-01  0.0448  1.1888 
+     10    0.0     1    12      0  0.338  1.00000  0.97090  0.99295  0.237E-04  0.412E-02  0.217E-01  0.0532  1.1902 
+     11    0.0     1    12      0  0.347  1.00000  0.96656  0.99170  0.283E-04  0.491E-02  0.258E-01  0.0631  1.1871 
+     12    0.0     2    12      0  0.366  1.00000  0.95609  0.99025  0.339E-04  0.586E-02  0.366E-01  0.0885  1.1862 
+     13    0.0     1    12      0  0.374  1.00000  0.94966  0.98856  0.406E-04  0.700E-02  0.425E-01  0.0877  1.1862 
+     14    0.0     1    12      0  0.382  1.00000  0.95126  0.98658  0.489E-04  0.835E-02  0.495E-01  0.1036  1.1892 
+     15    0.0     1    12      0  0.392  1.00000  0.94434  0.98437  0.587E-04  0.997E-02  0.578E-01  0.1223  1.1832 
+     16    0.0     2    12      0  0.411  1.00000  0.92816  0.98186  0.706E-04  0.119E-01  0.797E-01  0.1693  1.1818 
+     17    0.0     1    12      0  0.419  1.00000  0.91859  0.97902  0.851E-04  0.142E-01  0.916E-01  0.1663  1.1817 
+     18    0.0     1    12      0  0.429  1.00000  0.92157  0.97568  0.103E-03  0.169E-01  0.106E+00  0.1951  1.1878 
+     19    0.0     1    12      0  0.438  1.00000  0.91163  0.97217  0.125E-03  0.202E-01  0.123E+00  0.2281  1.1770 
+     20    0.0     2    11      0  0.459  1.00000  0.88947  0.96834  0.151E-03  0.241E-01  0.167E+00  0.3090  1.1751 
+     21    0.0     1    11      0  0.468  1.00000  0.87705  0.96411  0.184E-03  0.288E-01  0.191E+00  0.2997  1.1755 
+     22    0.0     1    11      0  0.478  1.00000  0.88255  0.95915  0.227E-03  0.344E-01  0.220E+00  0.3471  1.1869 
+     23    0.0     1    12      0  0.489  1.00000  0.87025  0.95442  0.278E-03  0.410E-01  0.254E+00  0.4004  1.1689 
+     24    0.0     2    13      0  0.512  1.00000  0.84457  0.94950  0.340E-03  0.490E-01  0.344E+00  0.5257  1.1670 
+     25    0.0     1    12      0  0.522  1.00000  0.83110  0.94426  0.420E-03  0.584E-01  0.393E+00  0.5009  1.1689 
+     26    0.0     1    13      0  0.533  1.00000  0.84025  0.93789  0.531E-03  0.697E-01  0.452E+00  0.5844  1.1881 
+     27    0.0     1    13      0  0.545  1.00000  0.82759  0.93275  0.659E-03  0.832E-01  0.522E+00  0.6974  1.1607 
+     28    0.0     2    15      0  0.570  1.00000  0.80298  0.92766  0.821E-03  0.993E-01  0.704E+00  0.9934  1.1596 
+     29    0.0     1    14      0  0.581  1.00000  0.79092  0.92233  0.103E-02  0.119E+00  0.803E+00  0.9934  1.1642 
+     30    0.0     1    14      0  0.591  1.00000  0.80347  0.91389  0.137E-02  0.119E+00  0.903E+00  1.0000  1.2131 
+     31    0.0     2    13      0  0.609  1.00000  0.82466  0.90550  0.182E-02  0.119E+00  0.110E+01  1.0000  1.2119 
+     32    0.0     2    13      0  0.625  1.00000  0.84275  0.89714  0.245E-02  0.119E+00  0.130E+01  1.0000  1.2133 
+     33    0.0     2    12      0  0.638  1.00000  0.85780  0.88908  0.333E-02  0.119E+00  0.150E+01  1.0000  1.2128 
+     34    0.0     3    12      0  0.656  1.00000  0.87609  0.88148  0.456E-02  0.119E+00  0.180E+01  1.0000  1.2122 
+     35    0.0     4    12      0  0.676  1.00000  0.89479  0.87450  0.629E-02  0.119E+00  0.220E+01  1.0000  1.2108 
+     36    0.0     4    11      0  0.693  1.00000  0.90901  0.86819  0.873E-02  0.119E+00  0.260E+01  1.0000  1.2098 
+     37    0.0     5    11      0  0.712  1.00000  0.92253  0.86266  0.122E-01  0.119E+00  0.310E+01  1.0000  1.2079 
+     38    0.0     5    12      0  0.728  1.00000  0.93283  0.85788  0.171E-01  0.119E+00  0.360E+01  1.0000  1.2062 
+     39    0.0     7    12      0  0.747  1.00000  0.94365  0.85385  0.241E-01  0.119E+00  0.430E+01  1.0000  1.2044 
+     40    0.0     9    12      0  0.769  1.00000  0.95360  0.85051  0.340E-01  0.119E+00  0.520E+01  1.0000  1.2026 
+     41    0.0     9    12      0  0.788  1.00000  0.96076  0.84779  0.481E-01  0.119E+00  0.610E+01  1.0000  1.2010 
+     42    0.0    12    12      0  0.809  1.00000  0.96762  0.84563  0.681E-01  0.119E+00  0.730E+01  1.0000  1.1994 
+     43    0.0    14    12      0  0.831  1.00000  0.97326  0.84393  0.965E-01  0.119E+00  0.870E+01  1.0000  1.1980 
+     44    0.0    17    12      0  0.853  1.00000  0.97805  0.84263  0.137E+00  0.119E+00  0.104E+02  1.0000  1.1967 
+     45    0.0    20    12      0  0.876  1.00000  0.98197  0.84165  0.195E+00  0.119E+00  0.124E+02  1.0000  1.1955 
+     46    0.0    24    12      0  0.899  1.00000  0.98523  0.84094  0.276E+00  0.119E+00  0.148E+02  1.0000  1.1945 
+     47    0.0    29    12      0  0.924  1.00000  0.98794  0.84044  0.392E+00  0.119E+00  0.177E+02  1.0000  1.1936 
+     48    0.0    34    12      0  0.949  1.00000  0.99013  0.84011  0.557E+00  0.119E+00  0.211E+02  1.0000  1.1928 
+     49    0.0    41    12      0  0.974  1.00000  0.99195  0.83991  0.790E+00  0.119E+00  0.252E+02  1.0000  1.1921 
+#-------------------------------------------------------------------------------------------------------------------#
+# Grid | CPU  | Sub | KSP | nAvg |  Sl  | Sensor | Sensor | Min     | Min     |  deltaS  | March    | cMax  | Ratio |
+# Lvl  | Time | Its | Its |      |      | Max    | Min    | Quality | Volume  |          | Distance |       | kMax  |
+#-------------------------------------------------------------------------------------------------------------------#
+     50    0.1    48    12      0  1.000  1.00000  0.99341  0.83981  0.112E+01  0.119E+00  0.300E+02  1.0000  1.1915 
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1812                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : v1812 OPENFOAM=1812
+Arch   : "LSB;label=32;scalar=64"
+Exec   : plot3dToFoam -noBlank volumeMesh.xyz
+Date   : Aug 01 2025
+Time   : 00:16:52
+Host   : DESKTOP-VNCMMAK
+PID    : 1625885
+I/O    : uncollated
+Case   : /mnt/d/emil/Cylinder_sonic
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Overriding DebugSwitches according to controlDict
+    SolverPerformance 0;
+
+Reading 1 blocks
+block 0 nx:51 ny:2 nz:50
+Reading block points
+block 0:
+Reading 5100 x coordinates...
+Reading 5100 y coordinates...
+Reading 5100 z coordinates...
+Looking at cell 0 0 0 to determine orientation.
+Right-handed block.
+
+Merged points within 1e-15 distance. Merged from 5100 down to 5000 points.
+Creating cells
+Creating boundary patches
+--> FOAM Warning : 
+    From function Foam::polyMesh::polyMesh(const Foam::IOobject&, Foam::pointField&&, const cellShapeList&, const faceListList&, const wordList&, const wordList&, const Foam::word&, const Foam::word&, const wordList&, bool)
+    in file meshes/polyMesh/polyMeshFromShapeMesh.C at line 590
+    Found 5000 undefined faces in mesh; adding to default patch.
+Writing polyMesh
+End
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1812                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : v1812 OPENFOAM=1812
+Arch   : "LSB;label=32;scalar=64"
+Exec   : autoPatch 30 -overwrite
+Date   : Aug 01 2025
+Time   : 00:16:52
+Host   : DESKTOP-VNCMMAK
+PID    : 1625886
+I/O    : uncollated
+Case   : /mnt/d/emil/Cylinder_sonic
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Overriding DebugSwitches according to controlDict
+    SolverPerformance 0;
+
+Create polyMesh for time = 0
+
+Mesh read in = 0.02 s
+
+
+Feature:30
+minCos :0.8660254037844387
+
+Assigned 2450 faces to patch auto0
+
+Assigned 2450 faces to patch auto1
+
+Assigned 50 faces to patch auto2
+
+Assigned 50 faces to patch auto3
+
+End
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1812                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : v1812 OPENFOAM=1812
+Arch   : "LSB;label=32;scalar=64"
+Exec   : createPatch -overwrite
+Date   : Aug 01 2025
+Time   : 00:16:52
+Host   : DESKTOP-VNCMMAK
+PID    : 1625887
+I/O    : uncollated
+Case   : /mnt/d/emil/Cylinder_sonic
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Overriding DebugSwitches according to controlDict
+    SolverPerformance 0;
+
+Create polyMesh for time = 0
+
+Reading "system/createPatchDict"
+
+Adding new patch symmetry1 as patch 5 from 
+{
+    type            symmetry;
+}
+
+Adding new patch symmetry2 as patch 6 from 
+{
+    type            symmetry;
+}
+
+Adding new patch cylinder as patch 7 from 
+{
+    type            wall;
+}
+
+Adding new patch inout as patch 8 from 
+{
+    type            patch;
+}
+
+
+Moving faces from patch auto0 to patch 5
+Moving faces from patch auto1 to patch 6
+Moving faces from patch auto2 to patch 7
+Moving faces from patch auto3 to patch 8
+
+Doing topology modification to order faces.
+
+Not synchronising points.
+
+Removing patches with no faces in them.
+
+Removing zero-sized patch defaultFaces type wall at position 0
+Removing zero-sized patch auto0 type patch at position 1
+Removing zero-sized patch auto1 type patch at position 2
+Removing zero-sized patch auto2 type patch at position 3
+Removing zero-sized patch auto3 type patch at position 4
+Removing patches.
+Writing repatched mesh to 0
+
+End
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1812                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : v1812 OPENFOAM=1812
+Arch   : "LSB;label=32;scalar=64"
+Exec   : renumberMesh -overwrite
+Date   : Aug 01 2025
+Time   : 00:16:52
+Host   : DESKTOP-VNCMMAK
+PID    : 1625888
+I/O    : uncollated
+Case   : /mnt/d/emil/Cylinder_sonic
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Overriding DebugSwitches according to controlDict
+    SolverPerformance 0;
+
+Create mesh for time = constant
+
+Mesh size: 2450
+Before renumbering :
+    band           : 50
+    profile        : 120097
+
+Using default renumberMethod.
+
+Selecting renumberMethod CuthillMcKee
+
+
+After renumbering :
+    band           : 50
+    profile        : 102225
+
+Writing mesh to "constant"
+End
+

@@ -26,7 +26,7 @@ parser.add_argument("-task", help="type of run to do", type=str, default="run_dr
 args = parser.parse_args()
 
 # Define the global parameters here
-U0 = 694.0
+U0 = 10.0
 p0 = 0.0
 nuTilda0 = 4.5e-5
 A0 = 0.1

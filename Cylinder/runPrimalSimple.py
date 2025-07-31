@@ -14,12 +14,12 @@ from dafoam import PYDAFOAM
 # =============================================================================
 gcomm = MPI.COMM_WORLD
 
-U0 = 694.0
+U0 = 10.0
 
 # Set the parameters for optimization
 daOptions = {
     "designSurfaces": ["cylinder"],
-    "solverName": "DASonicFoam",
+    "solverName": "DASimpleFoam",
     "primalMinResTol": 1.0e-16,
     "primalMinResTolDiff": 1.0e16,
     "primalBC": {

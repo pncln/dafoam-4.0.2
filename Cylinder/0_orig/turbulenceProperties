@@ -10,29 +10,18 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      controlDict;
+    location    "constant";
+    object      turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-startFrom       startTime;
-startTime       0;
-stopAt          endTime;
-endTime         3.0;
-deltaT          1e-7;
-maxCo           0.3;
-maxDeltaT       1e-6;
-adjustTimeStep  yes;
-writeControl    adjustableRunTime;
-writeInterval   0.01;
-purgeWrite      0;
-writeFormat     ascii;
-writePrecision  16;
-writeCompression on;
-timeFormat      general;
-timePrecision   8;
-runTimeModifiable true;
+simulationType RAS;
+RAS 
+{ 
+    RASModel             SpalartAllmaras;
+    turbulence           on;
+    printCoeffs          off;
+    Prt                  0.85;
+} 
 
-DebugSwitches
-{
-    SolverPerformance 0;
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

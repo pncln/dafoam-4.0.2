@@ -5,18 +5,18 @@
 
 \*---------------------------------------------------------------------------*/
 
-#include "DAResidualRhoPimpleSonicFoam.H"
+#include "DAResidualRhoSonicPimpleFoam.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-defineTypeNameAndDebug(DAResidualRhoPimpleSonicFoam, 0);
-addToRunTimeSelectionTable(DAResidual, DAResidualRhoPimpleSonicFoam, dictionary);
+defineTypeNameAndDebug(DAResidualRhoSonicPimpleFoam, 0);
+addToRunTimeSelectionTable(DAResidual, DAResidualRhoSonicPimpleFoam, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-DAResidualRhoPimpleSonicFoam::DAResidualRhoPimpleSonicFoam(
+DAResidualRhoSonicPimpleFoam::DAResidualRhoSonicPimpleFoam(
     const word modelType,
     const fvMesh& mesh,
     const DAOption& daOption,
@@ -72,7 +72,7 @@ DAResidualRhoPimpleSonicFoam::DAResidualRhoPimpleSonicFoam(
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void DAResidualRhoPimpleSonicFoam::clear()
+void DAResidualRhoSonicPimpleFoam::clear()
 {
     /*
     Description:
@@ -86,7 +86,7 @@ void DAResidualRhoPimpleSonicFoam::clear()
     phiRes_.clear();
 }
 
-void DAResidualRhoPimpleSonicFoam::calcResiduals(const dictionary& options)
+void DAResidualRhoSonicPimpleFoam::calcResiduals(const dictionary& options)
 {
     /*
     Description:
@@ -165,7 +165,7 @@ void DAResidualRhoPimpleSonicFoam::calcResiduals(const dictionary& options)
     normalizeResiduals(phiRes_);
 }
 
-void DAResidualRhoPimpleSonicFoam::updateIntermediateVariables()
+void DAResidualRhoSonicPimpleFoam::updateIntermediateVariables()
 {
     /*
     Description:
@@ -196,7 +196,7 @@ void DAResidualRhoPimpleSonicFoam::updateIntermediateVariables()
     }
 }
 
-void DAResidualRhoPimpleSonicFoam::correctBoundaryConditions()
+void DAResidualRhoSonicPimpleFoam::correctBoundaryConditions()
 {
     /*
     Description:
@@ -209,7 +209,7 @@ void DAResidualRhoPimpleSonicFoam::correctBoundaryConditions()
     // phi is surface field, no need to correct boundary conditions
 }
 
-void DAResidualRhoPimpleSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
+void DAResidualRhoSonicPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
 {
     /*
     Description:

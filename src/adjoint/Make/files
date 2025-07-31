@@ -103,6 +103,7 @@ DASolver/DASimpleFoam/DASimpleFoam.C
 DASolver/DAPimpleFoam/DAPimpleFoam.C
 DASolver/DARhoPimpleFoam/DARhoPimpleFoam.C
 DASolver/DARhoSonicPimpleFoam/DARhoSonicPimpleFoam.C
+DASolver/DARhoSonicPimpleFoam/DARhoSonicPimpleFoam.C
 DASolver/DAPimpleDyMFoam/DAPimpleDyMFoam.C
 DASolver/DARhoSimpleFoam/DARhoSimpleFoam.C
 DASolver/DARhoSimpleCFoam/DARhoSimpleCFoam.C

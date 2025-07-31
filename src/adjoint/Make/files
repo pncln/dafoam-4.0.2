@@ -78,6 +78,7 @@ DAStateInfo/DAStateInfo.C
 DAStateInfo/DAStateInfoSimpleFoam.C
 DAStateInfo/DAStateInfoPimpleFoam.C
 DAStateInfo/DAStateInfoRhoPimpleFoam.C
+DAStateInfo/DAStateInfoRhoSonicPimpleFoam.C
 DAStateInfo/DAStateInfoRhoSimpleFoam.C
 DAStateInfo/DAStateInfoRhoSimpleCFoam.C
 DAStateInfo/DAStateInfoTurboFoam.C
@@ -89,6 +90,7 @@ DAResidual/DAResidual.C
 DAResidual/DAResidualSimpleFoam.C
 DAResidual/DAResidualPimpleFoam.C
 DAResidual/DAResidualRhoPimpleFoam.C
+DAResidual/DAResidualRhoSonicPimpleFoam.C
 DAResidual/DAResidualRhoSimpleFoam.C
 DAResidual/DAResidualRhoSimpleCFoam.C
 DAResidual/DAResidualTurboFoam.C
@@ -100,6 +102,7 @@ DASolver/DASolver.C
 DASolver/DASimpleFoam/DASimpleFoam.C
 DASolver/DAPimpleFoam/DAPimpleFoam.C
 DASolver/DARhoPimpleFoam/DARhoPimpleFoam.C
+DASolver/DARhoSonicPimpleFoam/DARhoSonicPimpleFoam.C
 DASolver/DAPimpleDyMFoam/DAPimpleDyMFoam.C
 DASolver/DARhoSimpleFoam/DARhoSimpleFoam.C
 DASolver/DARhoSimpleCFoam/DARhoSimpleCFoam.C

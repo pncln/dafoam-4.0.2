@@ -2,7 +2,7 @@ Info<< "Reading thermophysical properties\n" << endl;
 
 pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
-thermo.validate(args.executable(), "h");  // Changed from "e" to "h" for enthalpy-based thermo
+thermo.validate(args.executable(), "e");  // Changed from "h" to "e"
 
 Info << "Reading field p\n" << endl;
 pPtr_.reset(new volScalarField(
@@ -15,7 +15,7 @@ TPtr_.reset(new volScalarField(
     IOobject("T", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
     mesh));
 volScalarField& T = TPtr_();
-(void)T;
+(void)T;  // Suppress unused variable warning
 
 Info << "Reading field U\n" << endl;
 UPtr_.reset(new volVectorField(
@@ -48,7 +48,7 @@ ePtr_.reset(
         thermo.he()  // Initialize from thermo model
     ));
 volScalarField& e = ePtr_();
-(void)e;
+(void)e;  // Suppress unused variable warning
 
 #include "compressibleCreatePhi.H"
 phiPtr_.reset(new surfaceScalarField(phi));

@@ -84,6 +84,9 @@ protected:
     /// turbulence pointer
     autoPtr<compressible::turbulenceModel> turbulencePtr_;
 
+    /// MRF pointer
+    autoPtr<IOMRFZoneListDF> MRFPtr_;
+
     /// DATurbulenceModel pointer
     autoPtr<DATurbulenceModel> daTurbulenceModelPtr_;
 

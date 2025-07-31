@@ -4,7 +4,7 @@
     Version : v4
 
     Description:
-        Child class for DASonic
+        Child class for DASonicFoam
 
 \*---------------------------------------------------------------------------*/
 
@@ -19,6 +19,7 @@
 #include "pressureControl.H"
 #include "constrainPressure.H"
 #include "psiThermo.H"
+#include "DAFvSource.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,7 +65,6 @@ protected:
     volScalarField& rho_;
     volScalarField& alphat_;
     volScalarField& psi_;
-    // volScalarField& dpdt_;
     volScalarField& K_;
     //@}
 
@@ -73,12 +73,6 @@ protected:
 
     /// pimpleControl object which will be initialized in this class
     pimpleControl pimple_;
-
-    /// \name These are constants to update the intermediate variables
-    //@{
-    scalar molWeight_;
-    scalar Cp_;
-    //@}
 
     /// whether to have fvSource term
     label hasFvSource_ = 0;
@@ -114,6 +108,7 @@ public:
     /// update the boundary condition for all the states in the selected solver
     virtual void correctBoundaryConditions();
 
+    /// calculate the preconditioner matrix using fvMatrix
     virtual void calcPCMatWithFvMatrix(Mat PCMat);
 };
 

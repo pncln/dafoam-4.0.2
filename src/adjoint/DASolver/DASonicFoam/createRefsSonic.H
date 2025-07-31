@@ -5,6 +5,7 @@ fvMesh& mesh = meshPtr_();
 pimpleControlDF& pimple = pimplePtr_();
 psiThermo& thermo = pThermoPtr_();
 volScalarField& p = pPtr_();
+volScalarField& T = TPtr_();  // Add this line
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
 surfaceScalarField& phi = phiPtr_();
@@ -17,4 +18,3 @@ const dictionary& allOptions = daOptionPtr_->getAllOptions();
 volVectorField& fvSource = fvSourcePtr_();
 volScalarField& fvSourceEnergy = fvSourceEnergyPtr_();
 fv::options fvOptions(mesh);
-// IOMRFZoneListDF& MRF = MRFPtr_();  // MRF not used for stationary cylinder

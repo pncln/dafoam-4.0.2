@@ -2,7 +2,7 @@ Info<< "Reading thermophysical properties\n" << endl;
 
 pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
-thermo.validate(args.executable(), "e");
+thermo.validate(args.executable(), "h");  // Changed from "e" to "h" for enthalpy-based thermo
 
 Info << "Reading field p\n" << endl;
 pPtr_.reset(new volScalarField(
@@ -10,16 +10,11 @@ pPtr_.reset(new volScalarField(
     mesh));
 volScalarField& p = pPtr_();
 
-rhoPtr_.reset(
-    new volScalarField(
-        IOobject(
-            "rho",
-            runTime.timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT,
-            IOobject::AUTO_WRITE),
-        thermo.rho()));
-volScalarField& rho = rhoPtr_();
+Info << "Reading field T\n" << endl;
+TPtr_.reset(new volScalarField(
+    IOobject("T", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
+    mesh));
+volScalarField& T = TPtr_();
 
 Info << "Reading field U\n" << endl;
 UPtr_.reset(new volVectorField(
@@ -27,35 +22,46 @@ UPtr_.reset(new volVectorField(
     mesh));
 volVectorField& U = UPtr_();
 
-Info<< "Creating field internal energy e\n" << endl;
-ePtr_.reset(new volScalarField(
-    IOobject("e", runTime.timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE),
-    mesh,
-    dimensionedScalar("e", dimEnergy/dimMass, 214650.0),  // Initial value for air at 300K
-    zeroGradientFvPatchField<scalar>::typeName));
-// Initialize internal energy from thermodynamic state
-// For perfect gas: e = CvT, where Cv = Cp - R = Cp - Cp/gamma
-volScalarField Cv = thermo.Cv();
-ePtr_() = Cv * thermo.T();
+// Initialize density from equation of state
+rhoPtr_.reset(
+    new volScalarField(
+        IOobject(
+            "rho",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE),
+        thermo.rho()));
+volScalarField& rho = rhoPtr_();
 
-// Create phi from compressibleCreatePhi.H
+// Create internal energy field (not read from disk, calculated from T)
+Info<< "Creating internal energy field e\n" << endl;
+ePtr_.reset(
+    new volScalarField(
+        IOobject(
+            "e",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE),
+        thermo.he()  // Initialize from thermo model
+    ));
+volScalarField& e = ePtr_();
+
 #include "compressibleCreatePhi.H"
-// surfaceScalarField phi is created here
 phiPtr_.reset(new surfaceScalarField(phi));
 
-// actuator related stuff
-Info << "Creating source term. " << endl;
+// Actuator disk source terms
+Info << "Creating source terms\n" << endl;
 fvSourcePtr_.reset(new volVectorField(
     IOobject("fvSource", runTime.timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE),
     mesh,
-    dimensionedVector("fvSource", dimensionSet(1, -2, -2, 0, 0, 0, 0), vector::zero),
-    zeroGradientFvPatchField<vector>::typeName));
+    dimensionedVector("fvSource", dimensionSet(1, -2, -2, 0, 0, 0, 0), vector::zero)));
 
 fvSourceEnergyPtr_.reset(new volScalarField(
     IOobject("fvSourceEnergy", runTime.timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE),
     mesh,
-    dimensionedScalar("fvSourceEnergy", dimensionSet(1, -1, -3, 0, 0, 0, 0), 0.0),
-    zeroGradientFvPatchField<scalar>::typeName));
+    dimensionedScalar("fvSourceEnergy", dimensionSet(1, -1, -3, 0, 0, 0, 0), 0.0)));
 
 mesh.setFluxRequired(p.name());
 
@@ -65,8 +71,9 @@ turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 Info << "Creating field kinetic energy K\n" << endl;
 KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 
-// Ensure thermodynamic consistency
+// Initialize thermo fields
 thermo.correct();
+rho = thermo.rho();
+rho.oldTime();
 
-// MRFPtr_.reset(new IOMRFZoneListDF(mesh));  // MRF not used for stationary cylinder
 #include "createFvOptions.H"

@@ -63,6 +63,8 @@ protected:
     /// thermal model
     autoPtr<psiThermo> pThermoPtr_;
 
+    autoPtr<volScalarField> TPtr_;
+
     /// pressure field pointer
     autoPtr<volScalarField> pPtr_;
 

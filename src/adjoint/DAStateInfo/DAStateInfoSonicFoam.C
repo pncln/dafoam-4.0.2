@@ -14,7 +14,7 @@ namespace Foam
 
 defineTypeNameAndDebug(DAStateInfoSonicFoam, 0);
 addToRunTimeSelectionTable(DAStateInfo, DAStateInfoSonicFoam, dictionary);
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     const word modelType,
@@ -38,7 +38,7 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     */
 
     stateInfo_["volScalarStates"].append("p");
-    stateInfo_["volScalarStates"].append("T");
+    stateInfo_["volScalarStates"].append("T");  // Keep T as state variable
     stateInfo_["modelStates"].append("nut");
     stateInfo_["volVectorStates"].append("U");
     stateInfo_["surfaceScalarStates"].append("phi");

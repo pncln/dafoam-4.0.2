@@ -1,27 +1,37 @@
 {
+    // Calculate energy source term if actuator disk is present
+    if (hasFvSource_)
+    {
+        fvSourceEnergy = fvSource & U;
+    }
 
+    // Update internal energy from temperature before solving
+    e = thermo.he();
 
     fvScalarMatrix EEqn(
-       
         fvm::ddt(rho, e) + fvm::div(phi, e)
-      + fvc::ddt(rho, K) + fvc::div(phi, K)
-      + fvc::div(fvc::absolute(phi/fvc::interpolate(rho), U), p, "div(phiv,p)")
-	  - fvm::laplacian(turbulence.alphaEff(), e)
-
-     ==
+        + fvc::ddt(rho, K) + fvc::div(phi, K)
+        + fvc::div(fvc::absolute(phi/fvc::interpolate(rho), U), p, "div(phiv,p)")
+        - fvm::laplacian(turbulence.alphaEff(), e)
+        ==
         fvOptions(rho, e)
+        + fvSourceEnergy
     );
 
     EEqn.relax();
 
-    // get the solver performance info such as initial
-    // and final residuals
     SolverPerformance<scalar> solverE = EEqn.solve();
 
     DAUtility::primalResidualControl(solverE, pimplePrintToScreen, "e", daGlobalVarPtr_->primalMaxRes);
 
-    // bound e
+    // Bound internal energy
     DAUtility::boundVar(allOptions, e, pimplePrintToScreen);
 
+    // Update temperature from internal energy
+    thermo.he() = e;
     thermo.correct();
+    
+    // Update temperature field explicitly
+    T = thermo.T();
+    T.correctBoundaryConditions();
 }

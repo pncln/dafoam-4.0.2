@@ -34,3 +34,4 @@ pimplePtr_.reset(
         mesh));
 
 pimpleControlDF& pimple = pimplePtr_();
+(void)pimple;  // Suppress unused variable warning

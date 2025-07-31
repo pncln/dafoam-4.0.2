@@ -15,6 +15,7 @@ TPtr_.reset(new volScalarField(
     IOobject("T", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
     mesh));
 volScalarField& T = TPtr_();
+(void)T;
 
 Info << "Reading field U\n" << endl;
 UPtr_.reset(new volVectorField(
@@ -47,6 +48,7 @@ ePtr_.reset(
         thermo.he()  // Initialize from thermo model
     ));
 volScalarField& e = ePtr_();
+(void)e;
 
 #include "compressibleCreatePhi.H"
 phiPtr_.reset(new surfaceScalarField(phi));

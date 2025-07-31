@@ -56,23 +56,24 @@ class DASonicFoam
     : public DASolver
 {
 
-protected:
-    /// simple pointer
+    protected:
+    /// pimple pointer
     autoPtr<pimpleControlDF> pimplePtr_;
 
     /// thermal model
     autoPtr<psiThermo> pThermoPtr_;
 
-    autoPtr<volScalarField> TPtr_;
-
     /// pressure field pointer
     autoPtr<volScalarField> pPtr_;
 
+    /// temperature field pointer
+    autoPtr<volScalarField> TPtr_;  // Add this line
+
     /// density field pointer
     autoPtr<volScalarField> rhoPtr_;
-	
-	/// internal energy pointer
-	autoPtr<volScalarField> ePtr_;
+    
+    /// internal energy pointer
+    autoPtr<volScalarField> ePtr_;
 
     /// velocity field pointer
     autoPtr<volVectorField> UPtr_;
@@ -86,9 +87,6 @@ protected:
     /// turbulence pointer
     autoPtr<compressible::turbulenceModel> turbulencePtr_;
 
-    /// MRF pointer
-    autoPtr<IOMRFZoneListDF> MRFPtr_;
-
     /// DATurbulenceModel pointer
     autoPtr<DATurbulenceModel> daTurbulenceModelPtr_;
 
@@ -100,6 +98,9 @@ protected:
 
     /// fvSource term for the energy equation
     autoPtr<volScalarField> fvSourceEnergyPtr_;
+
+    /// MRF pointer
+    autoPtr<IOMRFZoneListDF> MRFPtr_;
 
     /// whether to have fvSource term
     label hasFvSource_ = 0;

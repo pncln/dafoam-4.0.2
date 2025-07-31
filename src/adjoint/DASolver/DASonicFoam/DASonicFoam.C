@@ -50,8 +50,10 @@ DASonicFoam::DASonicFoam(
     : DASolver(argsAll, pyOptions),
       pimplePtr_(nullptr),
       pThermoPtr_(nullptr),
-      pPtr_(nullptr),				// check thisssss!!!!!!!!!!!!!! //
+      pPtr_(nullptr),
+      TPtr_(nullptr),  // Add this line
       rhoPtr_(nullptr),
+      ePtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
       KPtr_(nullptr),
@@ -59,8 +61,8 @@ DASonicFoam::DASonicFoam(
       daTurbulenceModelPtr_(nullptr),
       daFvSourcePtr_(nullptr),
       fvSourcePtr_(nullptr),
-      MRFPtr_(nullptr),
-      fvSourceEnergyPtr_(nullptr)
+      fvSourceEnergyPtr_(nullptr),
+      MRFPtr_(nullptr)
 {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

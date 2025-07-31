@@ -113,7 +113,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvSource_);
 
     URes_ = UEqn & U_;
-    normalizeResiduals(URes_);
+    normalizeResiduals(URes);
 
     // ******** e Residuals **********
     // Update internal energy from temperature using thermo model
@@ -136,7 +136,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     // Important: The residual for T equation is computed from the energy equation
     // but we need to transform it properly since we solve for T in the adjoint
     TRes_ = eEqn & e_;
-    normalizeResiduals(TRes_);
+    normalizeResiduals(TRes);
 
     // ******** p Residuals **********
     fvScalarMatrix UEqnP(
@@ -169,11 +169,11 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvm::laplacian(rhorAUf, p_));
 
     pRes_ = pEqn & p_;
-    normalizeResiduals(pRes_);
+    normalizeResiduals(pRes);
 
     // ******** phi Residuals **********
     phiRes_ = phiHbyA - pEqn.flux() - phi_;
-    normalizePhiResiduals(phiRes_);
+    normalizePhiResiduals(phiRes);
 }
 
 void DAResidualSonicFoam::updateIntermediateVariables()

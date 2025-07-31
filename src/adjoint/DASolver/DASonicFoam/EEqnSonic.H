@@ -1,7 +1,5 @@
 {
 
-    fvSourceEnergy = fvSource & U;
-
 
     fvScalarMatrix EEqn(
        
@@ -12,13 +10,7 @@
 
      ==
         fvOptions(rho, e)
-		- fvSourceEnergy
     );
-
-    if (MRF.active())
-    {
-        EEqn += fvc::div(MRF.phi(), p);
-    }
 
     EEqn.relax();
 

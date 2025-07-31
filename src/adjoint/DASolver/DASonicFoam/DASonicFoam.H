@@ -81,6 +81,9 @@ class DASonicFoam
     /// surface flux field pointer
     autoPtr<surfaceScalarField> phiPtr_;
 
+    /// pressure time deriv pointer
+    autoPtr<volScalarField> dpdtPtr_;
+
     /// kinetic energy pointer
     autoPtr<volScalarField> KPtr_;
 

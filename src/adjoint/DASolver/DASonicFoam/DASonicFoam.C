@@ -58,6 +58,7 @@ DASonicFoam::DASonicFoam(
       daTurbulenceModelPtr_(nullptr),
       daFvSourcePtr_(nullptr),
       fvSourcePtr_(nullptr),
+      MRFPtr_(nullptr),
       fvSourceEnergyPtr_(nullptr)
 {
 }

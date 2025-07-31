@@ -1,9 +1,6 @@
 // Update thermodynamic state with field pressure
-thermo.p() = p;
-thermo.correct();
 rho = thermo.rho();
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);
-rho.relax();
 
 volScalarField rAU(1.0/UEqn.A());
 volVectorField HbyA("HbyA", rAU * UEqn.H());
@@ -12,14 +9,14 @@ surfaceScalarField phid
 
 (
     "phid",
-    fvc::interpolate(thermo.psi())
+    fvc::interpolate(psi)
 
    *(
         fvc::flux(HbyA)
     //   + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
-MRF.makeRelative(fvc::interpolate(thermo.psi()), phid);
+// MRF.makeRelative(fvc::interpolate(thermo.psi()), phid);  // MRF not used for stationary cylinder
 
 // Non-orthogonal pressure corrector loop
 while (pimple.correctNonOrthogonal())

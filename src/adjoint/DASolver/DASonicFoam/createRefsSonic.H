@@ -17,4 +17,4 @@ const dictionary& allOptions = daOptionPtr_->getAllOptions();
 volVectorField& fvSource = fvSourcePtr_();
 volScalarField& fvSourceEnergy = fvSourceEnergyPtr_();
 fv::options fvOptions(mesh);
-IOMRFZoneListDF& MRF = MRFPtr_();
+// IOMRFZoneListDF& MRF = MRFPtr_();  // MRF not used for stationary cylinder

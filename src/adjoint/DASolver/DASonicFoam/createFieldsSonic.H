@@ -68,5 +68,5 @@ KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 // Ensure thermodynamic consistency
 thermo.correct();
 
-MRFPtr_.reset(new IOMRFZoneListDF(mesh));
+// MRFPtr_.reset(new IOMRFZoneListDF(mesh));  // MRF not used for stationary cylinder
 #include "createFvOptions.H"

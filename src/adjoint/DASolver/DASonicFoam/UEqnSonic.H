@@ -1,14 +1,14 @@
 // Solve the Momentum equation
 
-MRF.correctBoundaryVelocity(U);   // MRF is not used 
+// MRF.correctBoundaryVelocity(U);   // MRF is not used 
 if (hasFvSource_)
 {
     daFvSourcePtr_->calcFvSource(fvSource);
 }
 
 tmp<fvVectorMatrix> tUEqn(
-    fvm::ddt(rho, U) + fvm::div(phi, U)
-    + MRF.DDt(rho, U)
+    fvm::ddt(rho, U)
+    + fvm::div(phi, U)
     + turbulencePtr_->divDevRhoReff(U)
     - fvSource);
 fvVectorMatrix& UEqn = tUEqn.ref();

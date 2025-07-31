@@ -34,7 +34,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "DASonicFoam.H"
-#include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 namespace Foam
@@ -50,20 +49,16 @@ DASonicFoam::DASonicFoam(
     : DASolver(argsAll, pyOptions),
       pimplePtr_(nullptr),
       pThermoPtr_(nullptr),
-      pPtr_(nullptr),
-      TPtr_(nullptr),  // Add this line
+      pPtr_(nullptr),				// check thisssss!!!!!!!!!!!!!! //
       rhoPtr_(nullptr),
-      ePtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
-      dpdtPtr_(nullptr),
       KPtr_(nullptr),
       turbulencePtr_(nullptr),
       daTurbulenceModelPtr_(nullptr),
       daFvSourcePtr_(nullptr),
       fvSourcePtr_(nullptr),
-      fvSourceEnergyPtr_(nullptr),
-      MRFPtr_(nullptr)
+      fvSourceEnergyPtr_(nullptr)
 {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

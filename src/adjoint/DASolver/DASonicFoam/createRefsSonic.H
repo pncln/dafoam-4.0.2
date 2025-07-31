@@ -8,6 +8,7 @@ volScalarField& p = pPtr_();
 volScalarField& T = TPtr_();  // Add this line
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
+volScalarField& dpdt = dpdtPtr_();
 surfaceScalarField& phi = phiPtr_();
 volScalarField& K = KPtr_();
 volScalarField& e = ePtr_();

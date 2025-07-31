@@ -8,7 +8,7 @@ Info << "Reading field p\n" << endl;
 pPtr_.reset(new volScalarField(
     IOobject("p", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
     mesh));
-volScalarField& p = thermo.p();
+volScalarField& p = pPtr_();
 
 rhoPtr_.reset(
     new volScalarField(

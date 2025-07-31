@@ -1,3 +1,6 @@
+// Update thermodynamic state with field pressure
+thermo.p() = p;
+thermo.correct();
 rho = thermo.rho();
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);
 rho.relax();
@@ -9,15 +12,14 @@ surfaceScalarField phid
 
 (
     "phid",
-    fvc::interpolate(psi)
-	// fvc::interpolate(thermo.psi())
+    fvc::interpolate(thermo.psi())
 
    *(
         fvc::flux(HbyA)
-    //   + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
     )
 );
-MRF.makeRelative(fvc::interpolate(psi), phid);
+MRF.makeRelative(fvc::interpolate(thermo.psi()), phid);
 
 // Non-orthogonal pressure corrector loop
 while (pimple.correctNonOrthogonal())

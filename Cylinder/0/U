@@ -36,9 +36,8 @@ boundaryField
     }
     inout
     {
-        type inletOutlet;
-        value $internalField;
-        inletValue uniform (0 0 0);
+        type            fixedValue;
+        value           uniform (694 0 0);
     }
 }
 

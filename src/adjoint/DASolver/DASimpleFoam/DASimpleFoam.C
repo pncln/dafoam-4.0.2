@@ -28,18 +28,18 @@
 
 \*---------------------------------------------------------------------------*/
 
-#include "DASonicFoam.H"
+#include "DASimpleFoam.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-defineTypeNameAndDebug(DASonicFoam, 0);
-addToRunTimeSelectionTable(DASolver, DASonicFoam, dictionary);
+defineTypeNameAndDebug(DASimpleFoam, 0);
+addToRunTimeSelectionTable(DASolver, DASimpleFoam, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-DASonicFoam::DASonicFoam(
+DASimpleFoam::DASimpleFoam(
     char* argsAll,
     PyObject* pyOptions)
     : DASolver(argsAll, pyOptions),
@@ -60,19 +60,19 @@ DASonicFoam::DASonicFoam(
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void DASonicFoam::initSolver()
+void DASimpleFoam::initSolver()
 {
     /*
     Description:
         Initialize variables for DASolver
     */
 
-    Info << "Initializing fields for DASonicFoam" << endl;
+    Info << "Initializing fields for DASimpleFoam" << endl;
     Time& runTime = runTimePtr_();
     fvMesh& mesh = meshPtr_();
     argList& args = argsPtr_();
 #include "createPimpleControlPython.H"
-#include "createFieldsSonic.H"
+#include "createFieldsSimple.H"
 
     // read the RAS model from constant/turbulenceProperties
     const word turbModelName(
@@ -115,14 +115,14 @@ void DASonicFoam::initSolver()
     }
 }
 
-label DASonicFoam::solvePrimal()
+label DASimpleFoam::solvePrimal()
 {
     /*
     Description:
         Call the primal solver to get converged state variables
     */
 
-#include "createRefsSonic.H"
+#include "createRefsSimple.H"
 
     // call correctNut, this is equivalent to turbulence->validate();
     daTurbulenceModelPtr_->updateIntermediateVariables();

@@ -51,7 +51,7 @@ volScalarField& e = ePtr_();
 (void)e;  // Suppress unused variable warning
 
 #include "compressibleCreatePhi.H"
-phiPtr_.reset(new surfaceScalarField(phi));
+phi.write();
 
 // Actuator disk source terms
 Info << "Creating source terms\n" << endl;

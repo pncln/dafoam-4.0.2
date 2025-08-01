@@ -4,7 +4,8 @@ pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
 thermo.validate(args.executable(), "e");  // Changed from "h" to "e"
 
-volScalarField& p = thermo.p();
+pPtr_.reset(&thermo.p());
+volScalarField& p = pPtr_();
 
 Info << "Reading field T\n" << endl;
 TPtr_.reset(new volScalarField(

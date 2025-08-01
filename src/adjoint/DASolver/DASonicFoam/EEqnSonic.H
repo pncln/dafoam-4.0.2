@@ -25,8 +25,7 @@
     // Bound internal energy
     DAUtility::boundVar(allOptions, e, pimplePrintToScreen);
 
-    // Update temperature from internal energy
-    thermo.he() = e;
+    // Update thermodynamic properties
     thermo.correct();
     
     // Update temperature field explicitly

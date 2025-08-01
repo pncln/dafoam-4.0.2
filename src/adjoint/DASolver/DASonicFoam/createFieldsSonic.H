@@ -87,7 +87,6 @@ KPtr_.reset(new volScalarField("K", 0.5 * magSqr(U)));
 
 // Initialize thermo fields
 thermo.correct();
-rho = thermo.rho();
 rho.oldTime();
 
 #include "createFvOptions.H"

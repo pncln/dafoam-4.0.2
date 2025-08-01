@@ -13,7 +13,6 @@
         - fvm::laplacian(turbulence.alphaEff(), e)
         ==
         fvOptions(rho, e)
-        + fvSourceEnergy
     );
 
     EEqn.relax();

@@ -4,11 +4,7 @@ pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
 thermo.validate(args.executable(), "e");  // Changed from "h" to "e"
 
-Info << "Reading field p\n" << endl;
-pPtr_.reset(new volScalarField(
-    IOobject("p", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
-    mesh));
-volScalarField& p = pPtr_();
+volScalarField& p = thermo.p();
 
 Info << "Reading field T\n" << endl;
 TPtr_.reset(new volScalarField(
@@ -23,32 +19,16 @@ UPtr_.reset(new volVectorField(
     mesh));
 volVectorField& U = UPtr_();
 
-// Initialize density from equation of state (independent copy via tmp)
-tmp<volScalarField> trho = thermo.rho();
 rhoPtr_.reset(
     new volScalarField(
         IOobject(
             "rho",
             runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE),
-        trho()));
+            mesh),
+        thermo.rho()));
 volScalarField& rho = rhoPtr_();
 
-// Create internal energy field (independent copy via tmp)
-Info<< "Creating internal energy field e\n" << endl;
-tmp<volScalarField> te = thermo.he();
-ePtr_.reset(
-    new volScalarField(
-        IOobject(
-            "e",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE),
-        te()));
-volScalarField& e = ePtr_();
+volScalarField& e = thermo.he();
 
 #include "compressibleCreatePhiPython.H"
 phi.write();

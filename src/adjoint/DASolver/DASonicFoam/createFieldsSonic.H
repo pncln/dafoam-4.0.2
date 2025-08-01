@@ -51,7 +51,24 @@ volScalarField& e = ePtr_();
 (void)e;  // Suppress unused variable warning
 
 #include "compressibleCreatePhi.H"
-phi.write();
+
+// Store phi in the autoPtr
+phiPtr_.reset(
+    new surfaceScalarField(
+        IOobject(
+            "phi",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        phi
+    )
+);
+
+// Get reference to phi for use in this file
+surfaceScalarField& phiRef = phiPtr_();
+phiRef.write();
 
 // Actuator disk source terms
 Info << "Creating source terms\n" << endl;

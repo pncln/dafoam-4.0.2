@@ -60,6 +60,21 @@ DASonicFoam::DASonicFoam(
       fvSourcePtr_(nullptr),
       fvSourceEnergyPtr_(nullptr)
 {
+    // Create a dummy phi field early to avoid lookup errors
+    // This will be replaced with the proper phi in initSolver()
+    Time& runTime = runTimePtr_();
+    fvMesh& mesh = meshPtr_();
+    
+    phiPtr_.reset(
+        new surfaceScalarField(
+            IOobject(
+                "phi",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE),
+            mesh,
+            dimensionedScalar("phi", dimensionSet(0, 3, -1, 0, 0, 0, 0), 0.0)));
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

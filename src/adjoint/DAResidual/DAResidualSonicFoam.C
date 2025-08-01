@@ -24,10 +24,16 @@ DAResidualSonicFoam::DAResidualSonicFoam(
     const DAIndex& daIndex)
     : DAResidual(modelType, mesh, daOption, daModel, daIndex),
       // initialize and register state variables and their residuals
-      setResidualClassMemberVector(U, dimensionSet(1, -2, -2, 0, 0, 0, 0)),
-      setResidualClassMemberScalar(p, dimensionSet(1, -3, -1, 0, 0, 0, 0)),
-      setResidualClassMemberScalar(T, dimensionSet(1, -1, -3, 0, 0, 0, 0)),
-      setResidualClassMemberPhi(phi),
+      // velocity: [0 1 -1 0 0 0 0]  (m/s)
+    setResidualClassMemberVector(U, dimensionSet(0, 1, -1, 0, 0, 0, 0));
+
+    // pressure: [1 -1 -2 0 0 0 0] (Pa)
+    setResidualClassMemberScalar(p, dimensionSet(1, -1, -2, 0, 0, 0, 0));
+
+    // temperature: [0 0 0 1 0 0 0] (K)
+    setResidualClassMemberScalar(T, dimensionSet(0, 0, 0, 1, 0, 0, 0));
+
+    setResidualClassMemberPhi(phi); // (mass flux: [1 0 -1 0 0 0 0]) — macro handles it
       fvSource_(const_cast<volVectorField&>(
           mesh_.thisDb().lookupObject<volVectorField>("fvSource"))),
       fvSourceEnergy_(const_cast<volScalarField&>(
@@ -137,13 +143,13 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
 
     // ******** p Residuals **********
     // Need to create a separate UEqn for pressure equation
-    fvVectorMatrix UEqnP(
+    fvVectorMatrix UEqn(
         fvm::ddt(rho_, U_)
         + fvm::div(phi_, U_)
         + daTurb_.divDevRhoReff(U_)
         - fvSource_);
 
-    volScalarField rAU(1.0 / UEqnP.A());
+    volScalarField rAU(1.0 / UEqn.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
     // Fixed: Create HbyA properly
@@ -151,11 +157,11 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
     {
-        HbyA = constrainHbyA(rAU * UEqnP.H(), U_, p_);
+        HbyA = constrainHbyA(rAU * UEqn.H(), U_, p_);
     }
     else
     {
-        HbyA = rAU * UEqnP.H();
+        HbyA = rAU * UEqn.H();
     }
 
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
@@ -384,17 +390,17 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     eEqn.relax();
 
     // ******** p Residuals **********
-    volScalarField rAUP(1.0 / UEqnP.A());
+    volScalarField rAUP(1.0 / UEqn.A());
 
     volVectorField HbyAP("HbyAP", U_);
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
     {
-        HbyAP = constrainHbyA(rAUP * UEqnP.H(), U_, p_);
+        HbyAP = constrainHbyA(rAUP * UEqn.H(), U_, p_);
     }
     else
     {
-        HbyAP = rAUP * UEqnP.H();
+        HbyAP = rAUP * UEqn.H();
     }
 
     surfaceScalarField phiHbyAP("phiHbyAP", fvc::interpolate(rho_) * fvc::flux(HbyAP));

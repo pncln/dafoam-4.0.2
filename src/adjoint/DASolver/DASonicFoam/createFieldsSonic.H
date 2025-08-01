@@ -32,8 +32,10 @@ rhoPtr_.reset(
             mesh,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE),
-        thermo.rho()));
+        mesh,
+        dimensionedScalar("rho", dimDensity, 0.0)));
 volScalarField& rho = rhoPtr_();
+rho = thermo.rho();
 
 // Create internal energy field (not read from disk, calculated from T)
 Info<< "Creating internal energy field e\n" << endl;
@@ -45,10 +47,10 @@ ePtr_.reset(
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE),
-        thermo.he()  // Initialize from thermo model
-    ));
+        mesh,
+        dimensionedScalar("e", dimEnergy/dimMass, 0.0)));
 volScalarField& e = ePtr_();
-(void)e;  // Suppress unused variable warning
+e = thermo.he();  // Initialize from thermo model
 
 #include "compressibleCreatePhiPython.H"
 phi.write();

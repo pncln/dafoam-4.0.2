@@ -106,7 +106,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     URes_ = UEqn & U_;
     normalizeResiduals(URes);
 
-    // ******** e Residuals **********
+    // ******** e Residuals (which we transform to T residuals) **********
     
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
@@ -122,9 +122,17 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvm::laplacian(alphaEff, e_)
         - fvSourceEnergy_);
 
-    // Important: The residual for T equation is computed from the energy equation
-    // but we need to transform it properly since we solve for T in the adjoint
-    TRes_ = eEqn & e_;
+    // Get the energy residual
+    volScalarField eRes = eEqn & e_;
+    
+    // Transform the energy residual to temperature residual
+    // Since e = Cv * T for ideal gas, and we solve for T in the adjoint,
+    // we need to divide by Cv to get the temperature residual
+    volScalarField Cv = thermo_.Cv();
+    
+    // TRes = eRes / Cv
+    TRes_ = eRes / Cv;
+    
     normalizeResiduals(TRes);
 
     // ******** p Residuals **********
@@ -180,8 +188,6 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     
     // Update thermodynamic properties
     thermo_.correct();
-    
-    
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -301,7 +307,6 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** T Residuals (from energy equation) **********
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
-
     fvScalarMatrix eEqn(
         fvm::ddt(rho_, e_)
         + fvm::div(phi_, e_, "div(pc)")
@@ -379,8 +384,91 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     eEqn.relax();
 
     // ******** p Residuals **********
-    // [Rest of the pressure preconditioner code remains the same as in your original]
-    // ...
+    volScalarField rAUP(1.0 / UEqnP.A());
+
+    volVectorField HbyAP("HbyAP", U_);
+    label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
+    if (useConstrainHbyA)
+    {
+        HbyAP = constrainHbyA(rAUP * UEqnP.H(), U_, p_);
+    }
+    else
+    {
+        HbyAP = rAUP * UEqnP.H();
+    }
+
+    surfaceScalarField phiHbyAP("phiHbyAP", fvc::interpolate(rho_) * fvc::flux(HbyAP));
+
+    surfaceScalarField phidP(
+        "phidP",
+        fvc::interpolate(psi_) * phiHbyAP
+    );
+
+    fvScalarMatrix pEqn(
+        fvm::ddt(psi_, p_)
+        + fvc::div(phidP)
+        - fvm::laplacian(rho_ * rAUP, p_));
+
+    scalar pScaling = 1.0;
+    if (normStateDict.found("p"))
+    {
+        pScaling = normStateDict.getScalar("p");
+    }
+    scalar pResScaling = 1.0;
+
+    // set diag
+    forAll(p_, cellI)
+    {
+        if (normResDict.found("pRes"))
+        {
+            pResScaling = mesh_.V()[cellI];
+        }
+
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", cellI);
+        PetscInt colI = rowI;
+        scalarField D = pEqn.D();
+        scalar val1 = D[cellI] * pScaling / pResScaling;
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &rowI, 1, &colI, &val, INSERT_VALUES);
+    }
+
+    // set lower/owner
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
+    {
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("pRes"))
+        {
+            pResScaling = mesh_.V()[neighbourCellI];
+        }
+
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
+        PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
+        scalar val1 = pEqn.lower()[faceI] * pScaling / pResScaling;
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
+    }
+
+    // set upper/neighbour
+    for (label faceI = 0; faceI < daIndex_.nLocalInternalFaces; faceI++)
+    {
+        label ownerCellI = owner[faceI];
+        label neighbourCellI = neighbour[faceI];
+
+        if (normResDict.found("pRes"))
+        {
+            pResScaling = mesh_.V()[ownerCellI];
+        }
+
+        PetscInt rowI = daIndex_.getGlobalAdjointStateIndex("p", ownerCellI);
+        PetscInt colI = daIndex_.getGlobalAdjointStateIndex("p", neighbourCellI);
+        scalar val1 = pEqn.upper()[faceI] * pScaling / pResScaling;
+        assignValueCheckAD(val, val1);
+        MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
+    }
+
+    pEqn.relax();
 }
 
 } // End namespace Foam

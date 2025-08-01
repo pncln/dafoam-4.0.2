@@ -24,16 +24,10 @@ DAResidualSonicFoam::DAResidualSonicFoam(
     const DAIndex& daIndex)
     : DAResidual(modelType, mesh, daOption, daModel, daIndex),
       // initialize and register state variables and their residuals
-      // velocity: [0 1 -1 0 0 0 0]  (m/s)
-    setResidualClassMemberVector(U, dimensionSet(0, 1, -1, 0, 0, 0, 0));
-
-    // pressure: [1 -1 -2 0 0 0 0] (Pa)
-    setResidualClassMemberScalar(p, dimensionSet(1, -1, -2, 0, 0, 0, 0));
-
-    // temperature: [0 0 0 1 0 0 0] (K)
-    setResidualClassMemberScalar(T, dimensionSet(0, 0, 0, 1, 0, 0, 0));
-
-    setResidualClassMemberPhi(phi); // (mass flux: [1 0 -1 0 0 0 0]) — macro handles it
+      setResidualClassMemberVector(U, dimensionSet(1, -2, -2, 0, 0, 0, 0)),
+      setResidualClassMemberScalar(p, dimensionSet(1, -3, -1, 0, 0, 0, 0)),
+      setResidualClassMemberScalar(T, dimensionSet(1, -1, -3, 0, 0, 0, 0)),
+      setResidualClassMemberPhi(phi),
       fvSource_(const_cast<volVectorField&>(
           mesh_.thisDb().lookupObject<volVectorField>("fvSource"))),
       fvSourceEnergy_(const_cast<volScalarField&>(
@@ -112,7 +106,9 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     URes_ = UEqn & U_;
     normalizeResiduals(URes);
 
-    // ******** e Residuals (which we transform to T residuals) **********
+    // ******** e Residuals **********
+    // Update internal energy from temperature using thermo model
+    e_ = thermo_.he();
     
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
@@ -128,28 +124,20 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvm::laplacian(alphaEff, e_)
         - fvSourceEnergy_);
 
-    // Get the energy residual
-    volScalarField eRes = eEqn & e_;
-    
-    // Transform the energy residual to temperature residual
-    // Since e = Cv * T for ideal gas, and we solve for T in the adjoint,
-    // we need to divide by Cv to get the temperature residual
-    volScalarField Cv = thermo_.Cv();
-    
-    // TRes = eRes / Cv
-    TRes_ = eRes / Cv;
-    
+    // Important: The residual for T equation is computed from the energy equation
+    // but we need to transform it properly since we solve for T in the adjoint
+    TRes_ = eEqn & e_;
     normalizeResiduals(TRes);
 
     // ******** p Residuals **********
     // Need to create a separate UEqn for pressure equation
-    fvVectorMatrix UEqn(
+    fvVectorMatrix UEqnP(
         fvm::ddt(rho_, U_)
         + fvm::div(phi_, U_)
         + daTurb_.divDevRhoReff(U_)
         - fvSource_);
 
-    volScalarField rAU(1.0 / UEqn.A());
+    volScalarField rAU(1.0 / UEqnP.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
     // Fixed: Create HbyA properly
@@ -157,11 +145,11 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
     {
-        HbyA = constrainHbyA(rAU * UEqn.H(), U_, p_);
+        HbyA = constrainHbyA(rAU * UEqnP.H(), U_, p_);
     }
     else
     {
-        HbyA = rAU * UEqn.H();
+        HbyA = rAU * UEqnP.H();
     }
 
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
@@ -194,6 +182,15 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     
     // Update thermodynamic properties
     thermo_.correct();
+    
+    // Update density from equation of state
+    rho_ = thermo_.rho();
+    
+    // Update compressibility
+    psi_ = thermo_.psi();
+    
+    // Update internal energy from temperature
+    e_ = thermo_.he();
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -313,6 +310,9 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** T Residuals (from energy equation) **********
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
+    // Update e from T
+    e_ = thermo_.he();
+
     fvScalarMatrix eEqn(
         fvm::ddt(rho_, e_)
         + fvm::div(phi_, e_, "div(pc)")
@@ -390,30 +390,33 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     eEqn.relax();
 
     // ******** p Residuals **********
-    volScalarField rAUP(1.0 / UEqn.A());
-
-    volVectorField HbyAP("HbyAP", U_);
+    volScalarField rAU(1.0 / UEqn.A());
+    surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
+    //***************** NOTE *******************
+    // constrainHbyA has been used since OpenFOAM-v1606; however, it may degrade the accuracy of derivatives
+    // because constraining variables will create discontinuity. Here we have a option to use the old
+    // implementation in OpenFOAM-3.0+ and before (no constraint for HbyA)
+    autoPtr<volVectorField> HbyAPtr = nullptr;
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
     {
-        HbyAP = constrainHbyA(rAUP * UEqn.H(), U_, p_);
+        HbyAPtr.reset(new volVectorField(constrainHbyA(rAU * UEqn.H(), U_, p_)));
     }
     else
     {
-        HbyAP = rAUP * UEqn.H();
+        HbyAPtr.reset(new volVectorField("HbyA", U_));
+        HbyAPtr() = rAU * UEqn.H();
     }
+    volVectorField& HbyA = HbyAPtr();
 
-    surfaceScalarField phiHbyAP("phiHbyAP", fvc::interpolate(rho_) * fvc::flux(HbyAP));
+    surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
 
-    surfaceScalarField phidP(
-        "phidP",
-        fvc::interpolate(psi_) * phiHbyAP
-    );
+    // NOTE: we don't support transonic = true
 
     fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
-        + fvc::div(phidP)
-        - fvm::laplacian(rho_ * rAUP, p_));
+        + fvc::div(phiHbyA)
+        - fvm::laplacian(rhorAUf, p_));
 
     scalar pScaling = 1.0;
     if (normStateDict.found("p"))
@@ -421,7 +424,6 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
         pScaling = normStateDict.getScalar("p");
     }
     scalar pResScaling = 1.0;
-
     // set diag
     forAll(p_, cellI)
     {
@@ -473,8 +475,6 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
         assignValueCheckAD(val, val1);
         MatSetValues(PCMat, 1, &colI, 1, &rowI, &val, INSERT_VALUES);
     }
-
-    pEqn.relax();
 }
 
 } // End namespace Foam

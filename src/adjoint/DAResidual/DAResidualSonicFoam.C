@@ -107,8 +107,6 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     normalizeResiduals(URes);
 
     // ******** e Residuals **********
-    // Update internal energy from temperature using thermo model
-    e_ = thermo_.he();
     
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
@@ -189,8 +187,6 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     // Update compressibility
     psi_ = thermo_.psi();
     
-    // Update internal energy from temperature
-    e_ = thermo_.he();
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -310,8 +306,6 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** T Residuals (from energy equation) **********
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
-    // Update e from T
-    e_ = thermo_.he();
 
     fvScalarMatrix eEqn(
         fvm::ddt(rho_, e_)

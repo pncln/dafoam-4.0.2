@@ -5,8 +5,6 @@
         fvSourceEnergy = fvSource & U;
     }
 
-    // Update internal energy from temperature before solving
-    e = thermo.he();
 
     fvScalarMatrix EEqn(
         fvm::ddt(rho, e) + fvm::div(phi, e)

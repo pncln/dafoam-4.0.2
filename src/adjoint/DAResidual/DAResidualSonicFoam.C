@@ -181,11 +181,6 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     // Update thermodynamic properties
     thermo_.correct();
     
-    // Update density from equation of state
-    rho_ = thermo_.rho();
-    
-    // Update compressibility
-    psi_ = thermo_.psi();
     
     
     // Update kinetic energy

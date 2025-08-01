@@ -47,8 +47,4 @@ K = 0.5*magSqr(U);
 
 // Update thermodynamic properties
 thermo.correct();
-rho = thermo.rho();
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);
-
-// Ensure temperature field is updated
-T = thermo.T();

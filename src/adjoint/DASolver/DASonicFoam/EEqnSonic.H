@@ -27,8 +27,4 @@
 
     // Update thermodynamic properties
     thermo.correct();
-    
-    // Update temperature field explicitly
-    T = thermo.T();
-    T.correctBoundaryConditions();
 }

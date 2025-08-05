@@ -2,17 +2,21 @@ Info<< "Reading thermophysical properties\n" << endl;
 
 pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
-thermo.validate(args.executable(), "e");  // Changed from "h" to "e"
+thermo.validate(args.executable(), "e");
 
+// Get reference to pressure from thermo
 pPtr_.reset(&thermo.p());
 volScalarField& p = pPtr_();
 
+// Read temperature field separately
 Info << "Reading field T\n" << endl;
 TPtr_.reset(new volScalarField(
     IOobject("T", runTime.timeName(), mesh, IOobject::MUST_READ, IOobject::AUTO_WRITE),
     mesh));
 volScalarField& T = TPtr_();
-(void)T;  // Suppress unused variable warning
+
+// Initialize thermo T with the read T field
+thermo.T() = T;
 
 Info << "Reading field U\n" << endl;
 UPtr_.reset(new volVectorField(
@@ -25,10 +29,13 @@ rhoPtr_.reset(
         IOobject(
             "rho",
             runTime.timeName(),
-            mesh),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE),
         thermo.rho()));
 volScalarField& rho = rhoPtr_();
 
+// Get reference to internal energy from thermo (not create new)
 volScalarField& e = thermo.he();
 
 #include "compressibleCreatePhiPython.H"
@@ -51,9 +58,7 @@ mesh.setFluxRequired(p.name());
 Info<< "Creating turbulence model\n" << endl;
 turbulencePtr_.reset(compressible::turbulenceModel::New(rho, U, phi, thermo));
 
-Info << "Creating field dpdt\n"
-     << endl;
-
+Info << "Creating field dpdt\n" << endl;
 dpdtPtr_.reset(
     new volScalarField(
         IOobject(

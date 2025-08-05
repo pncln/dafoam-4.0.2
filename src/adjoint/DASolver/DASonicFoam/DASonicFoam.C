@@ -49,7 +49,8 @@ DASonicFoam::DASonicFoam(
     : DASolver(argsAll, pyOptions),
       pimplePtr_(nullptr),
       pThermoPtr_(nullptr),
-      pPtr_(nullptr),				// check thisssss!!!!!!!!!!!!!! //
+      pPtr_(nullptr),
+      TPtr_(nullptr),
       rhoPtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
@@ -58,7 +59,8 @@ DASonicFoam::DASonicFoam(
       daTurbulenceModelPtr_(nullptr),
       daFvSourcePtr_(nullptr),
       fvSourcePtr_(nullptr),
-      fvSourceEnergyPtr_(nullptr)
+      fvSourceEnergyPtr_(nullptr),
+      dpdtPtr_(nullptr)
 {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -92,7 +94,6 @@ void DASonicFoam::initSolver()
     daTurbulenceModelPtr_.reset(DATurbulenceModel::New(turbModelName, mesh, daOptionPtr_()));
 
 #include "createAdjoint.H"
-
 
     // initialize fvSource and compute the source term
     const dictionary& allOptions = daOptionPtr_->getAllOptions();

@@ -106,9 +106,9 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     URes_ = UEqn & U_;
     normalizeResiduals(URes);
 
-    // ******** e Residuals **********
-    // Update internal energy from temperature using thermo model
-    e_ = thermo_.he();
+    // ******** T Residuals (computed from energy equation) **********
+    // CRITICAL FIX: Don't assign e_ = thermo_.he() here as it causes self-assignment
+    // The internal energy e_ is already a reference to thermo_.he()
     
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
@@ -121,11 +121,14 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
             fvc::absolute(phi_ / fvc::interpolate(rho_), U_),
             p_,
             "div(phiv,p)")
-        - fvm::laplacian(alphaEff, e_)
-        - fvSourceEnergy_);
+        - fvm::laplacian(alphaEff, e_));
 
-    // Important: The residual for T equation is computed from the energy equation
-    // but we need to transform it properly since we solve for T in the adjoint
+    if (hasFvSource_)
+    {
+        eEqn -= fvSourceEnergy_;
+    }
+
+    // The residual for T equation is computed from the energy equation
     TRes_ = eEqn & e_;
     normalizeResiduals(TRes);
 
@@ -140,7 +143,6 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     volScalarField rAU(1.0 / UEqnP.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
-    // Fixed: Create HbyA properly
     volVectorField HbyA("HbyA", U_);
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
     if (useConstrainHbyA)
@@ -157,8 +159,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     // Create phid for compressible pressure equation
     surfaceScalarField phid(
         "phid",
-        fvc::interpolate(psi_) * phiHbyA
-    );
+        fvc::interpolate(psi_) * phiHbyA);
 
     fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
@@ -180,7 +181,11 @@ void DAResidualSonicFoam::updateIntermediateVariables()
         Update intermediate variables that depend on state variables
     */
     
-    // Update thermodynamic properties
+    // Update thermodynamic properties from T
+    // First update thermo's T field with our T state
+    thermo_.T() = T_;
+    
+    // Now correct thermo properties
     thermo_.correct();
     
     // Update density from equation of state
@@ -189,8 +194,8 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     // Update compressibility
     psi_ = thermo_.psi();
     
-    // Update internal energy from temperature
-    e_ = thermo_.he();
+    // The internal energy e_ is already a reference to thermo_.he()
+    // No need to update it separately
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -211,6 +216,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     T_.correctBoundaryConditions();
     
     // Update thermo after T boundary correction
+    thermo_.T() = T_;
     thermo_.correct();
 }
 
@@ -310,8 +316,7 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** T Residuals (from energy equation) **********
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
-    // Update e from T
-    e_ = thermo_.he();
+    // Don't reassign e_ here as it's already a reference to thermo_.he()
 
     fvScalarMatrix eEqn(
         fvm::ddt(rho_, e_)
@@ -322,10 +327,14 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
             fvc::absolute(phi_ / fvc::interpolate(rho_), U_),
             p_,
             "div(phiv,p)")
-        - fvm::laplacian(alphaEff, e_)
-        - fvSourceEnergy_);
+        - fvm::laplacian(alphaEff, e_));
+    
+    if (hasFvSource_)
+    {
+        eEqn -= fvSourceEnergy_;
+    }
 
-    // Get de/dT for the transformation
+    // Get de/dT for the transformation (Cv for constant volume)
     volScalarField Cv = thermo_.Cv();
     
     scalar TScaling = 1.0;
@@ -392,6 +401,7 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** p Residuals **********
     volScalarField rAU(1.0 / UEqn.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
+    
     //***************** NOTE *******************
     // constrainHbyA has been used since OpenFOAM-v1606; however, it may degrade the accuracy of derivatives
     // because constraining variables will create discontinuity. Here we have a option to use the old
@@ -424,6 +434,7 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
         pScaling = normStateDict.getScalar("p");
     }
     scalar pResScaling = 1.0;
+    
     // set diag
     forAll(p_, cellI)
     {

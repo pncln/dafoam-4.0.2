@@ -67,13 +67,10 @@ class DASonicFoam
     autoPtr<volScalarField> pPtr_;
 
     /// temperature field pointer
-    autoPtr<volScalarField> TPtr_;  // Add this line
+    autoPtr<volScalarField> TPtr_;
 
     /// density field pointer
     autoPtr<volScalarField> rhoPtr_;
-    
-    /// internal energy pointer
-    autoPtr<volScalarField> ePtr_;
 
     /// velocity field pointer
     autoPtr<volVectorField> UPtr_;

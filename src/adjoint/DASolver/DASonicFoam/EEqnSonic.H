@@ -5,6 +5,9 @@
         fvSourceEnergy = fvSource & U;
     }
 
+    // Access thermo.he() directly without creating a reference
+    volScalarField& e = thermo.he();
+
     fvScalarMatrix EEqn(
         fvm::ddt(rho, e) + fvm::div(phi, e)
         + fvc::ddt(rho, K) + fvc::div(phi, K)
@@ -27,6 +30,6 @@
     // Update thermodynamic properties
     thermo.correct();
     
-    // Update temperature field to match thermo
+    // Sync our T field with thermo's T
     T = thermo.T();
 }

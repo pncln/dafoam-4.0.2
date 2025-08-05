@@ -61,7 +61,7 @@ protected:
 
     /// \name These are intermediate variables
     //@{
-    volScalarField& e_;
+    // REMOVED e_ - we'll access thermo_.he() directly when needed
     volScalarField& rho_;
     volScalarField& alphat_;
     volScalarField& psi_;

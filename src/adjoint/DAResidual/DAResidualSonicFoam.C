@@ -34,7 +34,7 @@ DAResidualSonicFoam::DAResidualSonicFoam(
           mesh_.thisDb().lookupObject<volScalarField>("fvSourceEnergy"))),
       thermo_(const_cast<psiThermo&>(
           mesh_.thisDb().lookupObject<psiThermo>("thermophysicalProperties"))),
-      e_(thermo_.he()),
+      // DON'T initialize e_ as a reference here
       rho_(const_cast<volScalarField&>(
           mesh_.thisDb().lookupObject<volScalarField>("rho"))),
       alphat_(const_cast<volScalarField&>(
@@ -107,21 +107,21 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     normalizeResiduals(URes);
 
     // ******** T Residuals (computed from energy equation) **********
-    // CRITICAL FIX: Don't assign e_ = thermo_.he() here as it causes self-assignment
-    // The internal energy e_ is already a reference to thermo_.he()
+    // Get a reference to thermo's internal energy field
+    volScalarField& e = thermo_.he();
     
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     fvScalarMatrix eEqn(
-        fvm::ddt(rho_, e_)
-        + fvm::div(phi_, e_, divEScheme)
+        fvm::ddt(rho_, e)
+        + fvm::div(phi_, e, divEScheme)
         + fvc::ddt(rho_, K_)
         + fvc::div(phi_, K_)
         + fvc::div(
             fvc::absolute(phi_ / fvc::interpolate(rho_), U_),
             p_,
             "div(phiv,p)")
-        - fvm::laplacian(alphaEff, e_));
+        - fvm::laplacian(alphaEff, e));
 
     if (hasFvSource_)
     {
@@ -129,7 +129,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     }
 
     // The residual for T equation is computed from the energy equation
-    TRes_ = eEqn & e_;
+    TRes_ = eEqn & e;
     normalizeResiduals(TRes);
 
     // ******** p Residuals **********
@@ -182,7 +182,7 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     */
     
     // Update thermodynamic properties from T
-    // First update thermo's T field with our T state
+    // Sync thermo's T field with our T state
     thermo_.T() = T_;
     
     // Now correct thermo properties
@@ -193,9 +193,6 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     
     // Update compressibility
     psi_ = thermo_.psi();
-    
-    // The internal energy e_ is already a reference to thermo_.he()
-    // No need to update it separately
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -316,18 +313,19 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // ******** T Residuals (from energy equation) **********
     volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
-    // Don't reassign e_ here as it's already a reference to thermo_.he()
+    // Get reference to thermo's internal energy
+    volScalarField& e = thermo_.he();
 
     fvScalarMatrix eEqn(
-        fvm::ddt(rho_, e_)
-        + fvm::div(phi_, e_, "div(pc)")
+        fvm::ddt(rho_, e)
+        + fvm::div(phi_, e, "div(pc)")
         + fvc::ddt(rho_, K_)
         + fvc::div(phi_, K_)
         + fvc::div(
             fvc::absolute(phi_ / fvc::interpolate(rho_), U_),
             p_,
             "div(phiv,p)")
-        - fvm::laplacian(alphaEff, e_));
+        - fvm::laplacian(alphaEff, e));
     
     if (hasFvSource_)
     {

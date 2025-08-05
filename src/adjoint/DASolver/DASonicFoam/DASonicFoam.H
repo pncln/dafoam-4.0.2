@@ -63,7 +63,7 @@ class DASonicFoam
     /// thermal model
     autoPtr<psiThermo> pThermoPtr_;
 
-    /// pressure field pointer
+    /// pressure field pointer (points to thermo's pressure)
     autoPtr<volScalarField> pPtr_;
 
     /// temperature field pointer

@@ -5,8 +5,7 @@
         fvSourceEnergy = fvSource & U;
     }
 
-    // Sync thermo fields with our state variables before energy equation
-    thermo.p() = p;
+    // Sync thermo's T with our T field before energy equation
     thermo.T() = T;
 
     // Access thermo.he() directly
@@ -33,4 +32,7 @@
 
     // Update thermodynamic properties
     thermo.correct();
+    
+    // After thermo correction, update our T field to match thermo's T
+    T = thermo.T();
 }

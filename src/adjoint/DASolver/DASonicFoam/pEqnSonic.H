@@ -45,6 +45,8 @@ U.correctBoundaryConditions();
 fvOptions.correct(U);
 K = 0.5*magSqr(U);
 
-// Update thermodynamic properties
-thermo.correct();
+// Update density from equation of state
+rho = thermo.rho();
+
+// Bound density if needed
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);

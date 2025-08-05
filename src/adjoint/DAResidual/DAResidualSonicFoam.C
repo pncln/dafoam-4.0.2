@@ -34,7 +34,6 @@ DAResidualSonicFoam::DAResidualSonicFoam(
           mesh_.thisDb().lookupObject<volScalarField>("fvSourceEnergy"))),
       thermo_(const_cast<psiThermo&>(
           mesh_.thisDb().lookupObject<psiThermo>("thermophysicalProperties"))),
-      // DON'T initialize e_ as a reference here
       rho_(const_cast<volScalarField&>(
           mesh_.thisDb().lookupObject<volScalarField>("rho"))),
       alphat_(const_cast<volScalarField&>(
@@ -44,7 +43,6 @@ DAResidualSonicFoam::DAResidualSonicFoam(
       K_(const_cast<volScalarField&>(
           mesh_.thisDb().lookupObject<volScalarField>("K"))),
       daTurb_(const_cast<DATurbulenceModel&>(daModel.getDATurbulenceModel())),
-      // create pimpleControl
       pimple_(const_cast<fvMesh&>(mesh))
 {
     // initialize fvSource
@@ -181,7 +179,6 @@ void DAResidualSonicFoam::updateIntermediateVariables()
         Update intermediate variables that depend on state variables
     */
     
-    // Update thermodynamic properties from T
     // Sync thermo's T field with our T state
     thermo_.T() = T_;
     
@@ -212,7 +209,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     p_.correctBoundaryConditions();
     T_.correctBoundaryConditions();
     
-    // Update thermo after T boundary correction
+    // Update thermo after boundary corrections
     thermo_.T() = T_;
     thermo_.correct();
 }

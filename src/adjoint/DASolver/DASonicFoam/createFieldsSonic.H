@@ -4,20 +4,12 @@ pThermoPtr_.reset(psiThermo::New(mesh).ptr());
 psiThermo& thermo = pThermoPtr_();
 thermo.validate(args.executable(), "e");
 
-// Read pressure field separately (not from thermo)
-Info << "Reading field p\n" << endl;
-pPtr_.reset(
-    new volScalarField(
-        IOobject(
-            "p",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE),
-        mesh));
-volScalarField& p = pPtr_();
+// For pressure, we need to use thermo's pressure field
+// We can't create our own because thermo manages it internally
+volScalarField& p = thermo.p();
+pPtr_.reset(&p);  // Store pointer to thermo's pressure
 
-// Read temperature field separately
+// Read temperature field
 Info << "Reading field T\n" << endl;
 TPtr_.reset(
     new volScalarField(
@@ -42,7 +34,7 @@ UPtr_.reset(
         mesh));
 volVectorField& U = UPtr_();
 
-// Create rho field  
+// Create rho field - initialized from thermo
 rhoPtr_.reset(
     new volScalarField(
         IOobject(
@@ -51,19 +43,14 @@ rhoPtr_.reset(
             mesh,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE),
-        mesh,
-        dimensionedScalar("rho", dimDensity, 0.0)));
+        thermo.rho()));
 volScalarField& rho = rhoPtr_();
 
-// Make sure thermo's p and T fields match our fields
-thermo.p() = p;
+// Sync thermo's T with our T field
 thermo.T() = T;
 
-// Now update thermo properties
+// Update thermo properties
 thermo.correct();
-
-// Update rho from thermo
-rho = thermo.rho();
 
 #include "compressibleCreatePhiPython.H"
 phi.write();
@@ -118,7 +105,7 @@ KPtr_.reset(
         "K",
         0.5 * magSqr(U)));
 
-// Store old time
+// Initialize old time
 rho.oldTime();
 
 #include "createFvOptions.H"

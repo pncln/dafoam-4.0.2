@@ -4,14 +4,13 @@ runTime.setTime(0.0, 0);
 fvMesh& mesh = meshPtr_();
 pimpleControlDF& pimple = pimplePtr_();
 psiThermo& thermo = pThermoPtr_();
-volScalarField& p = *pPtr_;  // dereference the raw pointer
+volScalarField& p = pPtr_();
 volScalarField& T = TPtr_();
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
 volScalarField& dpdt = dpdtPtr_();
 surfaceScalarField& phi = phiPtr_();
 volScalarField& K = KPtr_();
-// Access thermo.he() directly without storing a reference
 compressible::turbulenceModel& turbulence = turbulencePtr_();
 scalar& cumulativeContErr = cumulativeContErr_;
 const volScalarField& psi = thermo.psi();

@@ -5,7 +5,11 @@
         fvSourceEnergy = fvSource & U;
     }
 
-    // Access thermo.he() directly without creating a reference
+    // Sync thermo fields with our state variables before energy equation
+    thermo.p() = p;
+    thermo.T() = T;
+
+    // Access thermo.he() directly
     volScalarField& e = thermo.he();
 
     fvScalarMatrix EEqn(
@@ -29,7 +33,4 @@
 
     // Update thermodynamic properties
     thermo.correct();
-    
-    // Sync our T field with thermo's T
-    T = thermo.T();
 }

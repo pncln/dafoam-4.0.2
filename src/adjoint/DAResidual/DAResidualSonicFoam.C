@@ -186,7 +186,7 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     thermo_.correct();
     
     // Update density from equation of state
-    if (&rho_ != &(thermo_.rho())) { rho_ = thermo_.rho(); }
+    rho_ = thermo_.rho(); // thermo_.rho() returns tmp<volScalarField>; no aliasing, safe assign
     
     // Update compressibility
     // psi_ aliases thermo_.psi(); avoid self-assignment

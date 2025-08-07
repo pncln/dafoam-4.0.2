@@ -6,7 +6,10 @@
     }
 
     // Sync thermo's T with our T field before energy equation
-    if (&(thermo.T()) != &T) { thermo.T() = T; }
+    if (&(thermo.T()) != &T)
+    {
+        thermo.T() = T;
+    }
 
     // Access thermo.he() directly
     volScalarField& e = thermo.he();
@@ -34,5 +37,8 @@
     thermo.correct();
     
     // After thermo correction, update our T field to match thermo's T
-    if (&T != &(thermo.T())) { T = thermo.T(); }
+    if (&T != &(thermo.T()))
+    {
+        T = thermo.T();
+    }
 }

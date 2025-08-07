@@ -6,6 +6,7 @@ pimpleControlDF& pimple = pimplePtr_();
 psiThermo& thermo = pThermoPtr_();
 volScalarField& p = pPtr_();
 volScalarField& T = TPtr_();
+(void)T;
 volScalarField& rho = rhoPtr_();
 volVectorField& U = UPtr_();
 volScalarField& dpdt = dpdtPtr_();
@@ -18,5 +19,3 @@ const dictionary& allOptions = daOptionPtr_->getAllOptions();
 volVectorField& fvSource = fvSourcePtr_();
 volScalarField& fvSourceEnergy = fvSourceEnergyPtr_();
 fv::options fvOptions(mesh);
-
-(void)turbulence;

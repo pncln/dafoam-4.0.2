@@ -12,8 +12,16 @@ pPtr_.reset(&p);  // Store pointer to thermo's pressure
 // Read temperature field
 Info << "Binding T to thermo.T()
 " << endl;
-volScalarField& T = thermo.T();
-TPtr_.reset(&T);
+TPtr_.reset(&thermo.T());
+TPtr_.reset(
+    new volScalarField(
+        IOobject(
+            "T",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE),
+        mesh));
 volScalarField& T = TPtr_();
 
 Info << "Reading field U\n" << endl;

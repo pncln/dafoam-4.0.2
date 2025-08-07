@@ -54,13 +54,13 @@ DASonicFoam::DASonicFoam(
       rhoPtr_(nullptr),
       UPtr_(nullptr),
       phiPtr_(nullptr),
+      dpdtPtr_(nullptr),
       KPtr_(nullptr),
       turbulencePtr_(nullptr),
       daTurbulenceModelPtr_(nullptr),
       daFvSourcePtr_(nullptr),
       fvSourcePtr_(nullptr),
-      fvSourceEnergyPtr_(nullptr),
-      dpdtPtr_(nullptr)
+      fvSourceEnergyPtr_(nullptr)
 {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

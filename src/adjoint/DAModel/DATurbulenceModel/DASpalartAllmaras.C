@@ -123,7 +123,9 @@ DASpalartAllmaras::DASpalartAllmaras(
 // src/TurbulenceModels/turbulenceModels/RAS/SpalartAllmaras/SpalartAllmaras.C
 tmp<volScalarField> DASpalartAllmaras::chi() const
 {
-    return nuTilda_ / this->nu();
+    // Ensure chi is dimensionless even if this->nu() is dynamic (μ):
+    // chi = ν~ / ν  with ν = μ / ρ  ⇒  chi = ν~ * ρ / μ
+    return (nuTilda_ * this->rho()) / this->nu();
 }
 
 tmp<volScalarField> DASpalartAllmaras::fv1(

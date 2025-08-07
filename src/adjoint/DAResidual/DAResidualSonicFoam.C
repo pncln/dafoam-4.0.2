@@ -100,9 +100,8 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         + fvm::div(phi_, U_, divUScheme)
         + daTurb_.divDevRhoReff(U_)
         - fvSource_);
-    UEqn.relax(1.0);
 
-    URes_ = (UEqn & U_) + fvc::grad(p_);
+    URes_ = UEqn & U_;
     normalizeResiduals(URes);
 
     // ******** T Residuals (computed from energy equation) **********
@@ -156,17 +155,20 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
 
     // Create phid for compressible pressure equation
+    surfaceScalarField phid(
+        "phid",
+        fvc::interpolate(psi_) * phiHbyA);
 
     fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
-        + fvc::div(phiHbyA)
-        - fvm::laplacian(rhorAUf, p_));
+        + fvc::div(phid)
+        - fvm::laplacian(rho_ * rAU, p_));
 
     pRes_ = pEqn & p_;
     normalizeResiduals(pRes);
 
     // ******** phi Residuals **********
-    phiRes_ = phiHbyA + pEqn.flux() - phi_;
+    phiRes_ = phiHbyA - pEqn.flux() - phi_;
     normalizePhiResiduals(phiRes);
 }
 
@@ -178,13 +180,13 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     */
     
     // Sync thermo's T field with our T state
-    thermo_.T() = T_;
+    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
     
     // Now correct thermo properties
     thermo_.correct();
     
     // Update density from equation of state
-    rho_ = thermo_.rho();
+    if (&rho_ != &(thermo_.rho())) { rho_ = thermo_.rho(); }
     
     // Update compressibility
     // psi_ aliases thermo_.psi(); avoid self-assignment
@@ -208,7 +210,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     T_.correctBoundaryConditions();
     
     // Update thermo after boundary corrections
-    thermo_.T() = T_;
+    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
     thermo_.correct();
 }
 

@@ -1,7 +1,6 @@
 volScalarField rAU(1.0/UEqn.A());
-surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
 volVectorField HbyA("HbyA", U);
-HbyA = rAU*UEqn.H();
+HbyA = rAU * UEqn.H();
 
 surfaceScalarField rAUf = fvc::interpolate(rAU);
 surfaceScalarField rho_f = fvc::interpolate(rho);
@@ -11,7 +10,8 @@ surfaceScalarField phiHbyA
     "phiHbyA",
     fvc::flux(rho*HbyA)
   + rho_f * rAUf * fvc::ddtCorr(U, phi)
-);surfaceScalarField phid
+);
+surfaceScalarField phid
 (
     "phid",
     fvc::interpolate(psi)

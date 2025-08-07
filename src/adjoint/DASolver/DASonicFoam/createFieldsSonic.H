@@ -10,16 +10,10 @@ volScalarField& p = thermo.p();
 pPtr_.reset(&p);  // Store pointer to thermo's pressure
 
 // Read temperature field
-Info << "Reading field T\n" << endl;
-TPtr_.reset(
-    new volScalarField(
-        IOobject(
-            "T",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE),
-        mesh));
+Info << "Binding T to thermo.T()
+" << endl;
+volScalarField& T = thermo.T();
+TPtr_.reset(&T);
 volScalarField& T = TPtr_();
 
 Info << "Reading field U\n" << endl;
@@ -47,7 +41,7 @@ rhoPtr_.reset(
 volScalarField& rho = rhoPtr_();
 
 // Sync thermo's T with our T field
-thermo.T() = T;
+// T is thermo.T(); no sync needed
 
 // Update thermo properties
 thermo.correct();

@@ -6,9 +6,7 @@
     }
 
     // Sync thermo's T with our T field before energy equation
-    if (&(thermo.T()) != &T) { thermo.T() = T; }
-
-    // Access thermo.he() directly
+// Access thermo.he() directly
     volScalarField& e = thermo.he();
 
     fvScalarMatrix EEqn(
@@ -20,8 +18,8 @@
           ? fvc::div(fvc::absolute(phi / fvc::interpolate(rho), U), p, "div(phiv,p)")
           : -dpdt)
       - fvm::laplacian(turbulencePtr_->alphaEff(), e)
-      - fvSourceEnergy);
-EEqn.relax();
+      - fvSourceEnergy
+);EEqn.relax();
 
     SolverPerformance<scalar> solverE = EEqn.solve();
 
@@ -34,5 +32,4 @@ EEqn.relax();
     thermo.correct();
     
     // After thermo correction, update our T field to match thermo's T
-    if (&T != &(thermo.T())) { T = thermo.T(); }
 }

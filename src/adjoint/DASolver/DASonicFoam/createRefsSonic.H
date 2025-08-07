@@ -13,6 +13,7 @@ volScalarField& dpdt = dpdtPtr_();
 surfaceScalarField& phi = phiPtr_();
 volScalarField& K = KPtr_();
 compressible::turbulenceModel& turbulence = turbulencePtr_();
+(void)turbulence;
 scalar& cumulativeContErr = cumulativeContErr_;
 const volScalarField& psi = thermo.psi();
 const dictionary& allOptions = daOptionPtr_->getAllOptions();

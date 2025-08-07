@@ -10,9 +10,7 @@ volScalarField& p = thermo.p();
 pPtr_.reset(&p);  // Store pointer to thermo's pressure
 
 // Read temperature field
-Info << "Binding T to thermo.T()
-" << endl;
-TPtr_.reset(&thermo.T());
+Info << "Reading field T\n" << endl;
 TPtr_.reset(
     new volScalarField(
         IOobject(
@@ -49,7 +47,7 @@ rhoPtr_.reset(
 volScalarField& rho = rhoPtr_();
 
 // Sync thermo's T with our T field
-// T is thermo.T(); no sync needed
+thermo.T() = T;
 
 // Update thermo properties
 thermo.correct();

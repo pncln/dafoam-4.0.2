@@ -2,11 +2,15 @@ volScalarField rAU(1.0/UEqn.A());
 volVectorField HbyA("HbyA", U);
 HbyA = rAU*UEqn.H();
 
+surfaceScalarField rAUf = fvc::interpolate(rAU);
+surfaceScalarField rho_f = fvc::interpolate(rho);
+
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
+    // mass-flux form + transient correction using available API in v1812
     fvc::flux(rho*HbyA)
-  + fvc::ddtPhiCorr(rAU, rho, U, phi)
+  + rho_f * rAUf * fvc::ddtCorr(U, phi)
 );
 
 surfaceScalarField phid

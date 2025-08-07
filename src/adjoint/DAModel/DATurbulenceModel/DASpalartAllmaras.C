@@ -481,8 +481,7 @@ void DASpalartAllmaras::calcResiduals(const dictionary& options)
         // calculate residuals
         nuTildaRes_ = nuTildaEqn.ref() & nuTilda_;
         // need to normalize residuals
-        normalizeResiduals(nuTildaRes);
-    }
+}
 
     return;
 }

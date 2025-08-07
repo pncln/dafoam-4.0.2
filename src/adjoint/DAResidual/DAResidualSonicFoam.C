@@ -101,7 +101,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         + daTurb_.divDevRhoReff(U_)
         - fvSource_);
 
-    URes_ = (UEqn & U_) + fvc::grad(p_);
+    URes_ = UEqn & U_;
     normalizeResiduals(URes);
 
     // ******** T Residuals (computed from energy equation) **********
@@ -140,6 +140,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
 
     volScalarField rAU(1.0 / UEqnP.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
+    surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
     volVectorField HbyA("HbyA", U_);
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");
@@ -155,18 +156,16 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
 
     // Create phid for compressible pressure equation
-    // phid not used; use phiHbyA directly for pressure residual
-
-    fvScalarMatrix pEqn(
+fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
-        + fvc::div(phid)
-        - fvm::laplacian(rho_ * rAU, p_));
+        + fvc::div(phiHbyA)
+        - fvm::laplacian(rhorAUf, p_));
 
     pRes_ = pEqn & p_;
     normalizeResiduals(pRes);
 
     // ******** phi Residuals **********
-    phiRes_ = phiHbyA + pEqn.flux() - phi_;
+    phiRes_ = phiHbyA - pEqn.flux() - phi_;
     normalizePhiResiduals(phiRes);
 }
 
@@ -178,7 +177,7 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     */
     
     // Sync thermo's T field with our T state
-    // T_ is thermo_.T(); no sync needed
+    thermo_.T() = T_;
     
     // Now correct thermo properties
     thermo_.correct();
@@ -187,7 +186,7 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     rho_ = thermo_.rho();
     
     // Update compressibility
-    // psi_ aliases thermo_.psi(); avoid self-assignment
+    psi_ = thermo_.psi();
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -208,7 +207,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     T_.correctBoundaryConditions();
     
     // Update thermo after boundary corrections
-    // T_ is thermo_.T(); no sync needed
+    thermo_.T() = T_;
     thermo_.correct();
 }
 

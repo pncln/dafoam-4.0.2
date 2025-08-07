@@ -141,7 +141,6 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
 
     volScalarField rAU(1.0 / UEqnP.A());
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
-    surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
     volVectorField HbyA("HbyA", U_);
     label useConstrainHbyA = daOption_.getOption<label>("useConstrainHbyA");

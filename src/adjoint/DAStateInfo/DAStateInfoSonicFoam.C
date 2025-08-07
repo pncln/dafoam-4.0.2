@@ -14,7 +14,7 @@ namespace Foam
 
 defineTypeNameAndDebug(DAStateInfoSonicFoam, 0);
 addToRunTimeSelectionTable(DAStateInfo, DAStateInfoSonicFoam, dictionary);
-// * * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     const word modelType,
@@ -37,13 +37,14 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
         models at runtime.
     */
 
+    // States (harmonized with DARhoPimpleFoam)
     stateInfo_["volScalarStates"].append("p");
-    stateInfo_["volScalarStates"].append("T");  // Keep T as state variable
+    stateInfo_["volScalarStates"].append("T");
     stateInfo_["modelStates"].append("nut");
     stateInfo_["volVectorStates"].append("U");
     stateInfo_["surfaceScalarStates"].append("phi");
 
-    // correct the names for model states based on the selected physical model at runtime
+    // correct model-state names (e.g., "nut" -> "nuTilda" for SA)
     daModel.correctModelStates(stateInfo_["modelStates"]);
 
     /* 
@@ -56,24 +57,6 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
         TRes         2      2      2      1      0
         pRes         3      2      2      2      1
         phiRes       2      2      1      1      0
-    
-        ******************************** NOTE 1 **********************************
-        One does not need to specify connectivity for each physical model, set the 
-        connectivity for original variables instead. For example, for turbulence models,
-        set nut. Then, how is nut connected to the other turbulence states will be 
-        set in the DAModel class. This is done by calling correctStateResidualModelCon. 
-        For example, for SA model we just replace nut with nuTilda, for SST model, we need 
-        to add extract connectivity since nut depends on grad(U), k, and omega. We need
-        to do this for other pyhsical models such as radiation models.
-        **************************************************************************
-    
-        ******************************** NOTE 2 **********************************
-        Do not specify physical model connectivity here, because they will be added
-        by calling addModelResidualCon. For example, for the SA turbulence
-        model, it will add the nuTildaRes to stateResConInfo_ and setup
-        its connectivity automatically.
-        **************************************************************************
-
     */
 
     stateResConInfo_.set(
@@ -109,7 +92,7 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
             {"U", "T"}, // lv2
         });
 
-    // need to correct connectivity for physical models for each residual
+    // correct connectivity for physical models for each residual
     daModel.correctStateResidualModelCon(stateResConInfo_["URes"]);
     daModel.correctStateResidualModelCon(stateResConInfo_["TRes"]);
     daModel.correctStateResidualModelCon(stateResConInfo_["pRes"]);
@@ -118,6 +101,7 @@ DAStateInfoSonicFoam::DAStateInfoSonicFoam(
     // add physical model residual connectivity
     daModel.addModelResidualCon(stateResConInfo_);
 }
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

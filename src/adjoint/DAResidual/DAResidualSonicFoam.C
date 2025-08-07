@@ -102,7 +102,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvSource_);
 
     URes_ = UEqn & U_;
-    normalizeResiduals(URes);
+    normalizeResiduals(URes_);
 
     // ******** T Residuals (computed from energy equation) **********
     // Get a reference to thermo's internal energy field
@@ -128,7 +128,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
 
     // The residual for T equation is computed from the energy equation
     TRes_ = eEqn & e;
-    normalizeResiduals(TRes);
+    normalizeResiduals(TRes_);
 
     // ******** p Residuals **********
     // Need to create a separate UEqn for pressure equation
@@ -165,11 +165,11 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvm::laplacian(rho_ * rAU, p_));
 
     pRes_ = pEqn & p_;
-    normalizeResiduals(pRes);
+    normalizeResiduals(pRes_);
 
     // ******** phi Residuals **********
     phiRes_ = phiHbyA - pEqn.flux() - phi_;
-    normalizePhiResiduals(phiRes);
+    normalizePhiResiduals(phiRes_);
 }
 
 void DAResidualSonicFoam::updateIntermediateVariables()
@@ -180,16 +180,16 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     */
     
     // Sync thermo's T field with our T state
-    thermo_.T() = T_;
+    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
     
     // Now correct thermo properties
     thermo_.correct();
     
     // Update density from equation of state
-    rho_ = thermo_.rho();
+    { const volScalarField& rhoThermo = thermo_.rho(); if (&rhoThermo != &rho_) { rho_ = rhoThermo; } }
     
     // Update compressibility
-    psi_ = thermo_.psi();
+    // psi_ is managed by thermo (thermo:psi). After thermo_.correct() it is already up to date.
     
     // Update kinetic energy
     K_ = 0.5 * magSqr(U_);
@@ -210,8 +210,8 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     T_.correctBoundaryConditions();
     
     // Update thermo after boundary corrections
-    thermo_.T() = T_;
-    thermo_.correct();
+    // Avoid self-assignment if T_ is the same object as thermo_.T()
+    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
 }
 
 void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)

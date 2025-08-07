@@ -45,8 +45,6 @@ rhoPtr_.reset(
 volScalarField& rho = rhoPtr_();
 
 // Sync thermo's T with our T field
-thermo.T() = T;
-
 // Update thermo properties
 thermo.correct();
 

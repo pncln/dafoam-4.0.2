@@ -100,9 +100,12 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         + fvm::div(phi_, U_, divUScheme)
         + daTurb_.divDevRhoReff(U_)
         - fvSource_);
+    UEqn.relax(1.0);
 
-    URes_ = UEqn & U_;
-// ******** T Residuals (computed from energy equation) **********
+    URes_ = (UEqn & U_) + fvc::grad(p_);
+    normalizeResiduals(URes);
+
+    // ******** T Residuals (computed from energy equation) **********
     // Get a reference to thermo's internal energy field
     volScalarField& e = thermo_.he();
     
@@ -126,7 +129,9 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
 
     // The residual for T equation is computed from the energy equation
     TRes_ = eEqn & e;
-// ******** p Residuals **********
+    normalizeResiduals(TRes);
+
+    // ******** p Residuals **********
     // Need to create a separate UEqn for pressure equation
     fvVectorMatrix UEqnP(
         fvm::ddt(rho_, U_)
@@ -135,6 +140,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
         - fvSource_);
 
     volScalarField rAU(1.0 / UEqnP.A());
+    surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho_ * rAU));
     
     volVectorField HbyA("HbyA", U_);
@@ -151,18 +157,18 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(rho_) * fvc::flux(HbyA));
 
     // Create phid for compressible pressure equation
-    surfaceScalarField phid(
-        "phid",
-        fvc::interpolate(psi_) * phiHbyA);
 
     fvScalarMatrix pEqn(
         fvm::ddt(psi_, p_)
-        + fvc::div(phid)
-        - fvm::laplacian(rho_ * rAU, p_));
+        + fvc::div(phiHbyA)
+        - fvm::laplacian(rhorAUf, p_));
 
     pRes_ = pEqn & p_;
-// ******** phi Residuals **********
-    phiRes_ = phiHbyA - pEqn.flux() - phi_;
+    normalizeResiduals(pRes);
+
+    // ******** phi Residuals **********
+    phiRes_ = phiHbyA + pEqn.flux() - phi_;
+    normalizePhiResiduals(phiRes);
 }
 
 void DAResidualSonicFoam::updateIntermediateVariables()
@@ -173,7 +179,7 @@ void DAResidualSonicFoam::updateIntermediateVariables()
     */
     
     // Sync thermo's T field with our T state
-    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
+    thermo_.T() = T_;
     
     // Now correct thermo properties
     thermo_.correct();
@@ -203,7 +209,7 @@ void DAResidualSonicFoam::correctBoundaryConditions()
     T_.correctBoundaryConditions();
     
     // Update thermo after boundary corrections
-    if (&(thermo_.T()) != &T_) { thermo_.T() = T_; }
+    thermo_.T() = T_;
     thermo_.correct();
 }
 

@@ -5,8 +5,9 @@ HbyA = rAU*UEqn.H();
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
-    fvc::flux(HbyA)
-    + fvc::interpolate(rho*rAU)*fvc::ddtCorr(U, phi)
+    // Use mass flux for HbyA and proper transient correction to keep dimensions consistent
+    fvc::flux(rho*HbyA)
+  + ddtPhiCorr(rAU, rho, U, phi)
 );
 
 surfaceScalarField phid

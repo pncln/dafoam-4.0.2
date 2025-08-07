@@ -1,27 +1,39 @@
 volScalarField rAU(1.0/UEqn.A());
 volVectorField HbyA("HbyA", U);
-HbyA = rAU * UEqn.H();
-
-surfaceScalarField rAUf = fvc::interpolate(rAU);
-surfaceScalarField rho_f = fvc::interpolate(rho);
-surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
+HbyA = rAU*UEqn.H();
 
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
     fvc::flux(rho*HbyA)
-  + rho_f * rAUf * fvc::ddtCorr(U, phi)
 );
 
-fvScalarMatrix pEqn(
-    fvm::ddt(psi, p)
-  + fvc::div(phiHbyA)
-  - fvm::laplacian(rhorAUf, p)
+surfaceScalarField phid
+(
+    "phid",
+    fvc::interpolate(psi)
+    * phiHbyA
 );
 
-pEqn.solve();
+// Non-orthogonal pressure corrector loop
+while (pimple.correctNonOrthogonal())
+{
+    fvScalarMatrix pEqn
+    (
+        fvm::ddt(psi, p)
+        + fvm::div(phid, p)
+        - fvm::laplacian(rho*rAU, p)
+        ==
+        fvOptions(psi, p, rho.name())
+    );
 
-phi = phiHbyA + pEqn.flux();
+    pEqn.solve();
+
+    if (pimple.finalNonOrthogonalIter())
+    {
+        phi = pEqn.flux();
+    }
+}
 
 #include "rhoEqn.H"
 #include "compressibleContinuityErrs.H"

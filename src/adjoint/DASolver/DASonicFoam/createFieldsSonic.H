@@ -20,8 +20,6 @@ TPtr_.reset(
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE),
         mesh));
-volScalarField& T = TPtr_();
-
 Info << "Reading field U\n" << endl;
 UPtr_.reset(
     new volVectorField(

@@ -19,4 +19,4 @@ volVectorField& fvSource = fvSourcePtr_();
 volScalarField& fvSourceEnergy = fvSourceEnergyPtr_();
 fv::options fvOptions(mesh);
 
-(void)dpdt;
+(void)turbulence;

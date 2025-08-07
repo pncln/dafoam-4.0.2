@@ -1,6 +1,7 @@
 volScalarField rAU(1.0/UEqn.A());
+surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
 volVectorField HbyA("HbyA", U);
-HbyA = rAU * UEqn.H();
+HbyA = rAU*UEqn.H();
 
 surfaceScalarField rAUf = fvc::interpolate(rAU);
 surfaceScalarField rho_f = fvc::interpolate(rho);
@@ -8,10 +9,9 @@ surfaceScalarField rho_f = fvc::interpolate(rho);
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
-    fvc::flux(rho*HbyA)           // mass flux of HbyA [kg/s]
-  + rho_f * rAUf * fvc::ddtCorr(U, phi)  // transient mass-flux correction
-);
-surfaceScalarField phid
+    fvc::flux(rho*HbyA)
+  + rho_f * rAUf * fvc::ddtCorr(U, phi)
+);surfaceScalarField phid
 (
     "phid",
     fvc::interpolate(psi)
@@ -24,9 +24,7 @@ while (pimple.correctNonOrthogonal())
     fvScalarMatrix pEqn(
     fvm::ddt(psi, p)
   + fvc::div(phiHbyA)
-  - fvm::laplacian(rhorAUf, p));
-
-    pEqn.solve();
+  - fvm::laplacian(rhorAUf, p));pEqn.solve();
 
     if (pimple.finalNonOrthogonalIter())
     {

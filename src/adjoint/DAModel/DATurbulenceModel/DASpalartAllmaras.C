@@ -123,23 +123,17 @@ DASpalartAllmaras::DASpalartAllmaras(
 // src/TurbulenceModels/turbulenceModels/RAS/SpalartAllmaras/SpalartAllmaras.C
 tmp<volScalarField> DASpalartAllmaras::chi() const
 {
-    // We need chi to be dimensionless for fv1() etc.
-    // nuTilda_ has kinematic viscosity dims [0 2 -1].
-    // Some compressible stacks expose this->nu() as dynamic viscosity [1 -1 -1].
-    // Handle both cases.
+    tmp<volScalarField> tNu = this->nu();            // may be dynamic or kinematic
+    const dimensionSet nuDims = tNu().dimensions();
+    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);
 
-    const dimensionSet& nuTildaDims = nuTilda_.dimensions();
-    const dimensionSet  nuDims      = this->nu().dimensions();
-
-    if (nuDims == nuTildaDims)
+    if (nuDims == kinDims)
     {
-        // this->nu() is kinematic already: chi = ν~/ν
-        return nuTilda_ / this->nu();
+        return nuTilda_ / tNu();                     // kinematic: ν~/ν
     }
     else
     {
-        // this->nu() is dynamic (μ). Make kinematic (ν = μ/ρ): chi = ν~ / (μ/ρ) = ν~ * ρ / μ
-        return (nuTilda_ * this->rho()) / this->nu();
+        return (nuTilda_ * this->rho()) / tNu();     // dynamic: ν~/ (μ/ρ) = ν~ ρ / μ
     }
 }
 

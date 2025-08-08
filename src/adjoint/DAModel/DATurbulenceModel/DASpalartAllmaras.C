@@ -123,25 +123,59 @@ DASpalartAllmaras::DASpalartAllmaras(
 // src/TurbulenceModels/turbulenceModels/RAS/SpalartAllmaras/SpalartAllmaras.C
 tmp<volScalarField> DASpalartAllmaras::chi() const
 {
-    tmp<volScalarField> tNu = this->nu();            // may be dynamic or kinematic
+    // Instrumentation: print dimensions and branch, but limit chatter
+    static label printCount = 0;
+
+    tmp<volScalarField> tNu = this->nu();                 // may be dynamic or kinematic
     const dimensionSet nuDims = tNu().dimensions();
-    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);
+    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);     // kinematic viscosity dims
+
+    if (printCount < 5)
+    {
+        Info<< "SA::chi() nu dims: " << nuDims
+            << "  nuTilda dims: " << nuTilda_.dimensions() << nl;
+    }
 
     if (nuDims == kinDims)
     {
-        return nuTilda_ / tNu();                     // kinematic: ν~/ν
+        tmp<volScalarField> tChi = nuTilda_ / tNu();
+        if (printCount < 5)
+        {
+            Info<< "SA::chi() branch: kinematic; chi dims: " << tChi().dimensions() << nl;
+            ++printCount;
+        }
+        return tChi;
     }
     else
     {
-        return (nuTilda_ * this->rho()) / tNu();     // dynamic: ν~/ (μ/ρ) = ν~ ρ / μ
+        tmp<volScalarField> tChi = (nuTilda_ * this->rho()) / tNu();
+        if (printCount < 5)
+        {
+            Info<< "SA::chi() branch: dynamic; chi dims: " << tChi().dimensions() << nl;
+            ++printCount;
+        }
+        return tChi;
     }
 }
 
 tmp<volScalarField> DASpalartAllmaras::fv1(
-    const volScalarField& chi) const
+    const volScalarField& /*chiArg*/) const
 {
+    static label printCount = 0;
+
+    const volScalarField chi(this->chi());
     const volScalarField chi3(pow3(chi));
-    return chi3 / (chi3 + pow3(Cv1_));
+
+    if (printCount < 5)
+    {
+        Info<< "SA::fv1() chi dims: " << chi.dimensions()
+            << "  chi^3 dims: " << chi3.dimensions()
+            << "  Cv1: " << Cv1_ << nl;
+        ++printCount;
+    }
+
+    dimensionedScalar Cv13("Cv1_3", chi3.dimensions(), pow3(Cv1_.value()));
+    return chi3 / (chi3 + Cv13);
 }
 
 tmp<volScalarField> DASpalartAllmaras::fv2(
@@ -492,7 +526,8 @@ void DASpalartAllmaras::calcResiduals(const dictionary& options)
         // calculate residuals
         nuTildaRes_ = nuTildaEqn.ref() & nuTilda_;
         // need to normalize residuals
-}
+        normalizeResiduals(nuTildaRes);
+    }
 
     return;
 }

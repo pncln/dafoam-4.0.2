@@ -250,11 +250,12 @@ tmp<volScalarField> DATurbulenceModel::alphaEff()
     else if (turbModelType_ == "compressible")
     {
         const volScalarField& alphat = mesh_.thisDb().lookupObject<volScalarField>("alphat");
+        const volScalarField& rho = mesh_.thisDb().lookupObject<volScalarField>("rho");
         const fluidThermo& thermo = mesh_.thisDb().lookupObject<fluidThermo>("thermophysicalProperties");
         return tmp<volScalarField>(
             new volScalarField(
                 "alphaEff",
-                thermo.alphaEff(alphat)));
+                thermo.alphaEff(rho * alphat)));
     }
     else
     {

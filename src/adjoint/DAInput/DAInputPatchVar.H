@@ -68,6 +68,7 @@ public:
         else
         {
             FatalErrorIn("DAInputPatchVar::size") << "varType not valid" << exit(FatalError);
+            return -1;
         }
     }
 

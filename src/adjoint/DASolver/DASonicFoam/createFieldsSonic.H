@@ -62,7 +62,14 @@ fvSourcePtr_.reset(
             IOobject::NO_READ,
             IOobject::AUTO_WRITE),
         mesh,
-        dimensionedVector("fvSource", dimensionSet(1, -2, -2, 0, 0, 0, 0), vector::zero)));
+        dimensionedVector(
+            "fvSource",
+            // fvSource represents a body-force per unit mass (acceleration)
+            // to maintain consistent dimensions within the momentum equation
+            // we store it with dimensions of acceleration and later multiply
+            // by the local density when adding it to the equation
+            dimensionSet(0, 1, -2, 0, 0, 0, 0),
+            vector::zero)));
 
 fvSourceEnergyPtr_.reset(
     new volScalarField(

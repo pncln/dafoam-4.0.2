@@ -507,7 +507,6 @@ label DARegression::compute()
         else if (modelType_[modelName] == "externalTensorFlow")
         {
             label nInputs = inputNames_[modelName].size();
-            label nCells = mesh_.nCells();
 
             DAUtility::pySetModelNameInterface(modelName.c_str(), DAUtility::pySetModelName);
 

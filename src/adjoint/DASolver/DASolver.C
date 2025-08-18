@@ -1043,11 +1043,9 @@ void DASolver::getOFField(
 
 void DASolver::updateOFFields(const scalar* states)
 {
-    label printInfo = 0;
     if (daOptionPtr_->getOption<label>("debug"))
     {
         Info << "Updating the OpenFOAM field..." << endl;
-        printInfo = 1;
     }
     daFieldPtr_->state2OFField(states);
 

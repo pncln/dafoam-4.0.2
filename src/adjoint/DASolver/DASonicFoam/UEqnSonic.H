@@ -21,7 +21,10 @@ UEqn.relax();
 
 // get the solver performance info such as initial
 // and final residuals
-SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p));
+// Divide the pressure gradient by rho so that the RHS has
+// the dimensions of acceleration, matching the LHS
+// of the momentum equation in DASonicFoam
+SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p)/rho);
 
 DAUtility::primalResidualControl(solverU, pimplePrintToScreen, "U", daGlobalVarPtr_->primalMaxRes);
  

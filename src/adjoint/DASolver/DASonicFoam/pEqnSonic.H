@@ -22,7 +22,11 @@ while (pimple.correctNonOrthogonal())
     (
         fvm::ddt(psi, p)
         + fvm::div(phid, p)
-        - fvm::laplacian(rho*rAU, p)
+        // The momentum equation is formulated in terms of acceleration
+        // (pressure gradient divided by density). Consequently the
+        // pressure correction uses rAU alone instead of rho*rAU to keep
+        // the units consistent
+        - fvm::laplacian(rAU, p)
         ==
         fvOptions(psi, p, rho.name())
     );
@@ -41,7 +45,9 @@ while (pimple.correctNonOrthogonal())
 #include "compressibleContinuityErrs.H"
 
 // Update velocity and kinetic energy
-U = HbyA - rAU*fvc::grad(p);
+// Scale the pressure gradient by rho to obtain acceleration before
+// applying the rAU operator
+U = HbyA - rAU*(fvc::grad(p)/rho);
 U.correctBoundaryConditions();
 fvOptions.correct(U);
 K = 0.5*magSqr(U);

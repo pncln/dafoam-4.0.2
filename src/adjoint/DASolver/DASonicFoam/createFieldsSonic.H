@@ -65,9 +65,8 @@ fvSourcePtr_.reset(
         dimensionedVector(
             "fvSource",
             // fvSource represents a body-force per unit mass (acceleration)
-            // to maintain consistent dimensions within the momentum equation
-            // we store it with dimensions of acceleration and later multiply
-            // by the local density when adding it to the equation
+            // and is added directly to the momentum equation without
+            // additional scaling
             dimensionSet(0, 1, -2, 0, 0, 0, 0),
             vector::zero)));
 

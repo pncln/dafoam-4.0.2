@@ -7,14 +7,12 @@ if (hasFvSource_)
 }
 
 
- tmp<fvVectorMatrix> tUEqn(
+tmp<fvVectorMatrix> tUEqn(
     fvm::ddt(rho, U)
     + fvm::div(phi, U)
-    + 
-    daTurbulenceModelPtr_->divDevRhoReff(U)
-    // fvSource contains acceleration; convert to force per unit volume by
-    // multiplying with density before adding to the momentum equation
-    - rho * fvSource);
+    + daTurbulenceModelPtr_->divDevRhoReff(U)
+    // fvSource contains acceleration and can be added directly
+    - fvSource);
 fvVectorMatrix& UEqn = tUEqn.ref();
 
 UEqn.relax();

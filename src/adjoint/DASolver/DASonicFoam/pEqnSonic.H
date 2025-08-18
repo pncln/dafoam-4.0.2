@@ -31,7 +31,9 @@ while (pimple.correctNonOrthogonal())
 
     if (pimple.finalNonOrthogonalIter())
     {
-        phi = pEqn.flux();
+        // Combine the predicted flux with the pressure correction flux
+        // to maintain a mass flux phi for consistent momentum coupling
+        phi = phiHbyA + pEqn.flux();
     }
 }
 

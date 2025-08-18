@@ -36,8 +36,10 @@ phiPtr_.reset(
             "phi",
             runTime.timeName(),
             mesh,
-            IOobject::READ_IF_PRESENT,
+            // Always recompute phi as mass flux to ensure correct dimensions
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE),
+        // mass flux: rho*U projected onto face area
         linearInterpolate(rho* U) & mesh.Sf()));
 
 surfaceScalarField& phi = phiPtr_();

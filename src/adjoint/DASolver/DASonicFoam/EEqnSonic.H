@@ -2,7 +2,10 @@
     // Calculate energy source term if actuator disk is present
     if (hasFvSource_)
     {
-        fvSourceEnergy = fvSource & U;
+        // fvSource stores acceleration (force per unit mass). Convert it to
+        // power per unit volume for the energy equation by multiplying with
+        // the local density before taking the inner product with velocity.
+        fvSourceEnergy = (rho * fvSource) & U;
     }
 
     // Sync thermo's T with our T field before energy equation

@@ -134,7 +134,11 @@ tmp<volScalarField> DASpalartAllmaras::chi() const
     {
         Info << "\n--- Debugging Dimensions in DASpalartAllmaras::chi() ---" << endl;
         Info << "nuTilda dimensions: " << nuTilda_.dimensions() << endl;
-        Info << "rho dimensions:     " << this->rho().dimensions() << endl;
+        // this->rho() returns a tmp<volScalarField>; to query the underlying
+        // field's dimensions we need to access the referred object via the
+        // tmp's operator(), otherwise we attempt to call dimensions() on tmp
+        // itself which results in a compilation error (no such member).
+        Info << "rho dimensions:     " << this->rho()().dimensions() << endl;
         Info << "nu dimensions:      " << tNu().dimensions() << endl;
         Info << "--------------------------------------------------------" << endl;
     }

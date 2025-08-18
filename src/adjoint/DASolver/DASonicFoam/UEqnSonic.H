@@ -8,10 +8,15 @@ if (hasFvSource_)
 
 
 tmp<fvVectorMatrix> tUEqn(
-    fvm::ddt(rho, U)
+    // Divide the conventional momentum equation by rho so that all terms
+    // have the dimensions of acceleration. This allows the body-force
+    // fvSource, which is supplied in acceleration units, to be added
+    // directly without any additional scaling.
+    (fvm::ddt(rho, U)
     + fvm::div(phi, U)
-    + daTurbulenceModelPtr_->divDevRhoReff(U)
-    // fvSource contains acceleration and can be added directly
+    + daTurbulenceModelPtr_->divDevRhoReff(U))/rho
+    // fvSource already represents an acceleration (force per unit mass)
+    // and thus can be combined with the above terms directly
     - fvSource);
 fvVectorMatrix& UEqn = tUEqn.ref();
 

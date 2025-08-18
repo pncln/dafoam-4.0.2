@@ -139,23 +139,35 @@ tmp<volScalarField> DASpalartAllmaras::chi() const
     if (nuDims == kinDims)
     {
         tmp<volScalarField> tChi = nuTilda_ / tNu();
-        if (printCount < 5)
-        {
-            Info<< "SA::chi() branch: kinematic; chi dims: " << tChi().dimensions() << nl;
-            ++printCount;
-        }
+        // if (printCount < 5)
+        // {
+        //     Info<< "SA::chi() branch: kinematic; chi dims: " << tChi().dimensions() << nl;
+        //     ++printCount;
+        // }
+        Info<< "mu dims: "    << thermo.mu().dimensions()        << nl
+            << "rho dims: "   << thermo.rho().dimensions()       << nl
+            << "nu dims: "    << this->nu().dimensions()         << nl   // may be μ or ν depending on model
+            << "nuTilda dims:"<< nuTilda_.dimensions()           << nl
+            << "chi dims: "   << chi.dimensions()                << nl;
         return tChi;
+
     }
     else
     {
         tmp<volScalarField> tChi = (nuTilda_ * this->rho()) / tNu();
-        if (printCount < 5)
-        {
-            Info<< "SA::chi() branch: dynamic; chi dims: " << tChi().dimensions() << nl;
-            ++printCount;
-        }
+        // if (printCount < 5)
+        // {
+        //     Info<< "SA::chi() branch: dynamic; chi dims: " << tChi().dimensions() << nl;
+        //     ++printCount;
+        // }
+        Info<< "mu dims: "    << thermo.mu().dimensions()        << nl
+            << "rho dims: "   << thermo.rho().dimensions()       << nl
+            << "nu dims: "    << this->nu().dimensions()         << nl   // may be μ or ν depending on model
+            << "nuTilda dims:"<< nuTilda_.dimensions()           << nl
+            << "chi dims: "   << chi.dimensions()                << nl;
         return tChi;
     }
+    
 }
 
 tmp<volScalarField> DASpalartAllmaras::fv1(
@@ -218,8 +230,17 @@ tmp<volScalarField> DASpalartAllmaras::fw(
 
 tmp<volScalarField> DASpalartAllmaras::DnuTildaEff() const
 {
+    tmp<volScalarField> tNu = this->nu();                          // may be μ or ν
+    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);              // kinematic dims
+
+    // Convert to kinematic if needed so (nuTilda_ + nu_kin) is dimensionally OK
+    tmp<volScalarField> tNuKin =
+        (tNu().dimensions() == kinDims)
+        ? tNu
+        : tNu()/this->rho();                                       // μ/ρ → ν
+
     return tmp<volScalarField>(
-        new volScalarField("DnuTildaEff", (nuTilda_ + this->nu()) / sigmaNut_));
+        new volScalarField("DnuTildaEff", (nuTilda_ + tNuKin())/sigmaNut_));
 }
 
 // Augmented functions

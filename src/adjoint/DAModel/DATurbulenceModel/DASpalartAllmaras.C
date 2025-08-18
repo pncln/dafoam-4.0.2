@@ -126,14 +126,17 @@ tmp<volScalarField> DASpalartAllmaras::chi() const
     // Instrumentation: print dimensions and branch, but limit chatter
     static label printCount = 0;
 
-    tmp<volScalarField> tNu = this->nu();                 // may be dynamic or kinematic
+    tmp<volScalarField> tNu = this->nu(); // may be dynamic or kinematic
     const dimensionSet nuDims = tNu().dimensions();
-    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);     // kinematic viscosity dims
+    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0); // kinematic viscosity dims
 
     if (printCount < 5)
     {
-        Info<< "SA::chi() nu dims: " << nuDims
-            << "  nuTilda dims: " << nuTilda_.dimensions() << nl;
+        Info << "\n--- Debugging Dimensions in DASpalartAllmaras::chi() ---" << endl;
+        Info << "nuTilda dimensions: " << nuTilda_.dimensions() << endl;
+        Info << "rho dimensions:     " << this->rho().dimensions() << endl;
+        Info << "nu dimensions:      " << tNu().dimensions() << endl;
+        Info << "--------------------------------------------------------" << endl;
     }
 
     if (nuDims == kinDims)

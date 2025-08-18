@@ -1,4 +1,4 @@
-DAFoam with DASonicFoam
+DAFoam with Supersonic Solver
 ======================================
 Super-sonic sovler for DAFoam
 

@@ -307,7 +307,23 @@ tmp<volScalarField> DATurbulenceModel::rho() const
     }
     else if (turbModelType_ == "compressible")
     {
-        const volScalarField& rho = mesh_.thisDb().lookupObject<volScalarField>("rho");
+        const volScalarField& rho =
+            mesh_.thisDb().lookupObject<volScalarField>("rho");
+
+        // In some cases (e.g. sonicFoam) the rho field may be stored
+        // without physical dimensions, which causes any use of nu = mu/rho
+        // to retain the dynamic viscosity dimensions.  Detect this situation
+        // and attach the correct mass-density dimensions while keeping the
+        // numerical values intact.
+        if (rho.dimensions() == dimensionSet(0, 0, 0, 0, 0, 0, 0))
+        {
+            return rho
+                * dimensionedScalar(
+                      "rhoDim",
+                      dimensionSet(1, -3, 0, 0, 0, 0, 0),
+                      1.0);
+        }
+
         return rho;
     }
     else
@@ -327,7 +343,14 @@ dimensionSet DATurbulenceModel::rhoDimensions() const
     }
     else if (turbModelType_ == "compressible")
     {
-        const volScalarField& rho = mesh_.thisDb().lookupObject<volScalarField>("rho");
+        const volScalarField& rho =
+            mesh_.thisDb().lookupObject<volScalarField>("rho");
+
+        if (rho.dimensions() == dimensionSet(0, 0, 0, 0, 0, 0, 0))
+        {
+            return dimensionSet(1, -3, 0, 0, 0, 0, 0);
+        }
+
         return rho.dimensions();
     }
     else

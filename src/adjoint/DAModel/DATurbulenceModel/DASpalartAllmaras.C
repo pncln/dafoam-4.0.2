@@ -218,17 +218,28 @@ tmp<volScalarField> DASpalartAllmaras::fw(
 
 tmp<volScalarField> DASpalartAllmaras::DnuTildaEff() const
 {
-    tmp<volScalarField> tNu = this->nu();                          // may be μ or ν
-    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0);              // kinematic dims
+    tmp<volScalarField> tNu = this->nu();
+    const dimensionSet nuDims = tNu().dimensions();
+    const dimensionSet kinDims(0, 2, -1, 0, 0, 0, 0); // Kinematic viscosity dims
 
-    // Convert to kinematic if needed so (nuTilda_ + nu_kin) is dimensionally OK
-    tmp<volScalarField> tNuKin =
-        (tNu().dimensions() == kinDims)
-        ? tNu
-        : tNu()/this->rho();                                       // μ/ρ → ν
-
-    return tmp<volScalarField>(
-        new volScalarField("DnuTildaEff", (nuTilda_ + tNuKin())/sigmaNut_));
+    if (nuDims == kinDims) // Incompressible case
+    {
+        return tmp<volScalarField>(
+            new volScalarField(
+                "DnuTildaEff",
+                (nuTilda_ + tNu()) / sigmaNut_
+            )
+        );
+    }
+    else // Compressible case
+    {
+        return tmp<volScalarField>(
+            new volScalarField(
+                "DnuTildaEff",
+                (nuTilda_ + tNu() / this->rho()) / sigmaNut_
+            )
+        );
+    }
 }
 
 // Augmented functions

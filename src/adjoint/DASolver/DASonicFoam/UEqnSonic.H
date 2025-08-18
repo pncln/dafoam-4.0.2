@@ -8,26 +8,22 @@ if (hasFvSource_)
 
 
 tmp<fvVectorMatrix> tUEqn(
-    // Divide the conventional momentum equation by rho so that all terms
-    // have the dimensions of acceleration. This allows the body-force
-    // fvSource, which is supplied in acceleration units, to be added
-    // directly without any additional scaling.
-    (fvm::ddt(rho, U)
+    // Build the conventional momentum equation. The body-force fvSource is
+    // supplied in acceleration units (force per unit mass), so convert it to
+    // a force per unit volume by multiplying with rho before adding it to
+    // the equation.
+    fvm::ddt(rho, U)
     + fvm::div(phi, U)
-    + daTurbulenceModelPtr_->divDevRhoReff(U))/rho
-    // fvSource already represents an acceleration (force per unit mass)
-    // and thus can be combined with the above terms directly
-    - fvSource);
+    + daTurbulenceModelPtr_->divDevRhoReff(U)
+    - rho*fvSource);
 fvVectorMatrix& UEqn = tUEqn.ref();
 
 UEqn.relax();
 
 // get the solver performance info such as initial
 // and final residuals
-// Divide the pressure gradient by rho so that the RHS has
-// the dimensions of acceleration, matching the LHS
-// of the momentum equation in DASonicFoam
-SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p)/rho);
+// Solve the momentum equation
+SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p));
 
 DAUtility::primalResidualControl(solverU, pimplePrintToScreen, "U", daGlobalVarPtr_->primalMaxRes);
  

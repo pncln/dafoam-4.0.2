@@ -139,35 +139,23 @@ tmp<volScalarField> DASpalartAllmaras::chi() const
     if (nuDims == kinDims)
     {
         tmp<volScalarField> tChi = nuTilda_ / tNu();
-        // if (printCount < 5)
-        // {
-        //     Info<< "SA::chi() branch: kinematic; chi dims: " << tChi().dimensions() << nl;
-        //     ++printCount;
-        // }
-        Info<< "mu dims: "    << thermo.mu().dimensions()        << nl
-            << "rho dims: "   << thermo.rho().dimensions()       << nl
-            << "nu dims: "    << this->nu().dimensions()         << nl   // may be μ or ν depending on model
-            << "nuTilda dims:"<< nuTilda_.dimensions()           << nl
-            << "chi dims: "   << chi.dimensions()                << nl;
+        if (printCount < 5)
+        {
+            Info<< "SA::chi() branch: kinematic; chi dims: " << tChi().dimensions() << nl;
+            ++printCount;
+        }
         return tChi;
-
     }
     else
     {
         tmp<volScalarField> tChi = (nuTilda_ * this->rho()) / tNu();
-        // if (printCount < 5)
-        // {
-        //     Info<< "SA::chi() branch: dynamic; chi dims: " << tChi().dimensions() << nl;
-        //     ++printCount;
-        // }
-        Info<< "mu dims: "    << thermo.mu().dimensions()        << nl
-            << "rho dims: "   << thermo.rho().dimensions()       << nl
-            << "nu dims: "    << this->nu().dimensions()         << nl   // may be μ or ν depending on model
-            << "nuTilda dims:"<< nuTilda_.dimensions()           << nl
-            << "chi dims: "   << chi.dimensions()                << nl;
+        if (printCount < 5)
+        {
+            Info<< "SA::chi() branch: dynamic; chi dims: " << tChi().dimensions() << nl;
+            ++printCount;
+        }
         return tChi;
     }
-    
 }
 
 tmp<volScalarField> DASpalartAllmaras::fv1(

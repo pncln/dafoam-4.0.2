@@ -1,33 +1,37 @@
 // Solve the Momentum equation
 
-// MRF.correctBoundaryVelocity(U);   // MRF is not used 
+// MRF.correctBoundaryVelocity(U);   // MRF is not used
 if (hasFvSource_)
 {
     daFvSourcePtr_->calcFvSource(fvSource);
 }
 
-
 tmp<fvVectorMatrix> tUEqn(
     // Build the conventional momentum equation. The body-force fvSource is
-    // supplied in acceleration units (force per unit mass), so convert it to
-    // a force per unit volume by multiplying with rho before adding it to
-    // the equation.
+    // defined per unit volume and will be added explicitly below.
     fvm::ddt(rho, U)
-    + fvm::div(phi, U)
-    + daTurbulenceModelPtr_->divDevRhoReff(U)
-    - rho*fvSource);
+  + fvm::div(phi, U)
+  + daTurbulenceModelPtr_->divDevRhoReff(U));
 fvVectorMatrix& UEqn = tUEqn.ref();
+
+// Constrain by fvOptions if available
+fvOptions.constrain(UEqn);
+
+// Add external body-force source term
+if (hasFvSource_)
+{
+    UEqn -= fvSource;
+}
 
 UEqn.relax();
 
-// get the solver performance info such as initial
-// and final residuals
-// Solve the momentum equation
+// Solve the momentum equation and retrieve solver performance
 SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p));
 
+// Apply any fvOptions corrections to the solved field
+fvOptions.correct(U);
+
 DAUtility::primalResidualControl(solverU, pimplePrintToScreen, "U", daGlobalVarPtr_->primalMaxRes);
- 
-								 
 
 // bound U
 DAUtility::boundVar(allOptions, U, pimplePrintToScreen);

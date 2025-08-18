@@ -212,7 +212,12 @@ void DATurbulenceModel::correctAlphat()
 
         volScalarField& alphat = const_cast<volScalarField&>(
             mesh_.thisDb().lookupObject<volScalarField>("alphat"));
-        alphat = rho() * nut_ / Prt;
+        // alphat should remain a kinematic diffusivity field.  Using rho() here
+        // would convert it to dynamic viscosity units and lead to dimension
+        // inconsistencies when assigning to the alphat field which is defined
+        // with kinematic dimensions.  The density factor is applied later when
+        // forming alphaEff() for compressible flows.
+        alphat = nut_ / Prt;
         alphat.correctBoundaryConditions();
     }
 }

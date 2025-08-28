@@ -2,14 +2,13 @@
     // Calculate energy source term if actuator disk is present
     if (hasFvSource_)
     {
-        // fvSource stores acceleration (force per unit mass). Convert it to
-        // power per unit volume for the energy equation by multiplying with
-        // the local density before taking the inner product with velocity.
-        fvSourceEnergy = (rho * fvSource) & U;
+        // fvSource is defined as force per unit volume; its dot product with
+        // velocity gives the power input per unit volume
+        fvSourceEnergy = fvSource & U;
     }
 
     // Sync thermo's T with our T field before energy equation
-// Access thermo.he() directly
+    // Access thermo.he() directly
     volScalarField& e = thermo.he();
 
     fvScalarMatrix EEqn(
@@ -22,7 +21,8 @@
           : -dpdt)
       - fvm::laplacian(turbulencePtr_->alphaEff(), e)
       - fvSourceEnergy
-);EEqn.relax();
+    );
+    EEqn.relax();
 
     SolverPerformance<scalar> solverE = EEqn.solve();
 
@@ -33,6 +33,6 @@
 
     // Update thermodynamic properties
     thermo.correct();
-    
+
     // After thermo correction, update our T field to match thermo's T
 }

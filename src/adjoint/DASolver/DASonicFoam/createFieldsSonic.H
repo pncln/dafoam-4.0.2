@@ -64,10 +64,9 @@ fvSourcePtr_.reset(
         mesh,
         dimensionedVector(
             "fvSource",
-            // fvSource represents a body-force per unit mass (acceleration)
-            // and is added directly to the momentum equation without
-            // additional scaling
-            dimensionSet(0, 1, -2, 0, 0, 0, 0),
+            // fvSource represents a body force per unit volume and is added
+            // explicitly to the momentum equation
+            dimensionSet(1, -2, -2, 0, 0, 0, 0),
             vector::zero)));
 
 fvSourceEnergyPtr_.reset(

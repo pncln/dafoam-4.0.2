@@ -6,16 +6,13 @@ if (hasFvSource_)
     daFvSourcePtr_->calcFvSource(fvSource);
 }
 
+// Build the conventional momentum equation. The body-force fvSource will be
+// added explicitly via the source term below.
 tmp<fvVectorMatrix> tUEqn(
-    // Build the conventional momentum equation. The body-force fvSource is
-    // defined per unit volume and will be added explicitly below.
     fvm::ddt(rho, U)
   + fvm::div(phi, U)
   + daTurbulenceModelPtr_->divDevRhoReff(U));
 fvVectorMatrix& UEqn = tUEqn.ref();
-
-// Constrain by fvOptions if available
-fvOptions.constrain(UEqn);
 
 // Add external body-force source term
 if (hasFvSource_)
@@ -24,6 +21,9 @@ if (hasFvSource_)
 }
 
 UEqn.relax();
+
+// Apply any fvOptions constraints after relaxation
+fvOptions.constrain(UEqn);
 
 // Solve the momentum equation and retrieve solver performance
 SolverPerformance<vector> solverU = solve(UEqn == -fvc::grad(p));

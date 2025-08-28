@@ -14,10 +14,10 @@ tmp<fvVectorMatrix> tUEqn(
   + daTurbulenceModelPtr_->divDevRhoReff(U));
 fvVectorMatrix& UEqn = tUEqn.ref();
 
-// Add external body-force source term explicitly to the equation source
+// Add external body-force source term
 if (hasFvSource_)
 {
-    UEqn.source() -= fvSource;
+    UEqn -= fvSource;
 }
 
 UEqn.relax();

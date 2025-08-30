@@ -41,7 +41,15 @@ rhoPtr_.reset(
             mesh,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE),
-        thermo.rho()));
+        // thermo.rho() in sonicFoam may return a field without mass-density
+        // dimensions, which later causes dimension mismatches when forming
+        // dynamic diffusivity terms like rho*alphat. Attach the correct
+        // density dimensions while preserving the numerical values.
+        thermo.rho()
+        * dimensionedScalar(
+              "rhoDim",
+              dimensionSet(1, -3, 0, 0, 0, 0, 0),
+              1.0)));
 volScalarField& rho = rhoPtr_();
 
 // Sync thermo's T with our T field

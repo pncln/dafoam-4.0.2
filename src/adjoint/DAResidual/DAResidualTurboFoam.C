@@ -131,7 +131,7 @@ void DAResidualTurboFoam::calcResiduals(const dictionary& options)
     // ******** e Residuals **********
     // copied and modified from EEqn.H
     volSymmTensorField Teff = -daTurb_.devRhoReff();
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     URel_ == U_;
     MRF_.makeRelative(URel_);

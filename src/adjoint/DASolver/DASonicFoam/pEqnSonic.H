@@ -1,4 +1,10 @@
-rho = thermo.rho();
+// thermo.rho() may lack mass-density dimensions; reattach them to avoid
+// dimension-set inconsistencies in subsequent operations.
+rho = thermo.rho()
+    * dimensionedScalar(
+          "rhoDim",
+          dimensionSet(1, -3, 0, 0, 0, 0, 0),
+          1.0);
 
 volScalarField rAU(1.0/UEqn.A());
 surfaceScalarField rhorAUf("rhorAUf", fvc::interpolate(rho*rAU));
@@ -43,5 +49,10 @@ U.correctBoundaryConditions();
 fvOptions.correct(U);
 K = 0.5*magSqr(U);
 
-rho = thermo.rho();
+// Keep rho field's physical dimensions consistent after each update
+rho = thermo.rho()
+    * dimensionedScalar(
+          "rhoDim",
+          dimensionSet(1, -3, 0, 0, 0, 0, 0),
+          1.0);
 DAUtility::boundVar(allOptions, rho, pimplePrintToScreen);

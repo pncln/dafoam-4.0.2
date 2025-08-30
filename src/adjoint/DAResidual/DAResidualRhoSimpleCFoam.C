@@ -125,7 +125,7 @@ void DAResidualRhoSimpleCFoam::calcResiduals(const dictionary& options)
 
     // ******** e Residuals **********
     // copied and modified from EEqn.H
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     fvScalarMatrix EEqn(
         fvm::div(phi_, he_, divHEScheme)

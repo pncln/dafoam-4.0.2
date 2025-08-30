@@ -16,10 +16,6 @@ Mathematical Summary
 Documentation
 -------------
 
-cd "$DAFOAM_ROOT_PATH/repos" && \
-rm -rf dafoam-4.0.2 && \
-git clone https://github.com/pncln/dafoam-4.0.2.git && \
-cd dafoam-4.0.2 && \
-./Allmake
+<pre lang="markdown"> ```bash cd "$DAFOAM_ROOT_PATH/repos" && \ rm -rf dafoam-4.0.2 && \ git clone https://github.com/pncln/dafoam-4.0.2.git && \ cd dafoam-4.0.2 && \ ./Allmake ``` </pre>
 
 Refer to https://dafoam.github.io for installation, documentation, and tutorials.

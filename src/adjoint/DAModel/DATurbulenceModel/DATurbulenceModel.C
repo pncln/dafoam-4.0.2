@@ -254,13 +254,19 @@ tmp<volScalarField> DATurbulenceModel::alphaEff()
     }
     else if (turbModelType_ == "compressible")
     {
-        const volScalarField& alphat = mesh_.thisDb().lookupObject<volScalarField>("alphat");
-        const volScalarField& rho = mesh_.thisDb().lookupObject<volScalarField>("rho");
-        const fluidThermo& thermo = mesh_.thisDb().lookupObject<fluidThermo>("thermophysicalProperties");
+        const volScalarField& alphat =
+            mesh_.thisDb().lookupObject<volScalarField>("alphat");
+        const fluidThermo& thermo =
+            mesh_.thisDb().lookupObject<fluidThermo>("thermophysicalProperties");
         return tmp<volScalarField>(
             new volScalarField(
                 "alphaEff",
-                thermo.alphaEff(rho * alphat)));
+                // For compressible flows thermo::alphaEff expects a
+                // kinematic turbulent diffusivity.  Supplying rho*alphat
+                // gives it dynamic viscosity units and leads to dimension
+                // mismatches.  Pass alphat directly so thermo handles the
+                // conversion internally.
+                thermo.alphaEff(alphat)));
     }
     else
     {

@@ -144,7 +144,7 @@ void DAResidualRhoPimpleFoam::calcResiduals(const dictionary& options)
 
     // ******** e Residuals **********
     // copied and modified from EEqn.H
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     K_ = 0.5 * magSqr(U_);
     dpdt_ = fvc::ddt(p_);
@@ -413,7 +413,7 @@ void DAResidualRhoPimpleFoam::calcPCMatWithFvMatrix(Mat PCMat)
     // NOTE: the PCMatFVMatrix calculation for the EEqn is somehow way off
     // so we comment it out for now...
     // ******** e Residuals **********
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     K_ = 0.5 * magSqr(U_);
     dpdt_ = fvc::ddt(p_);

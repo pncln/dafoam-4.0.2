@@ -106,7 +106,7 @@ void DAResidualSonicFoam::calcResiduals(const dictionary& options)
     // Get a reference to thermo's internal energy field
     volScalarField& e = thermo_.he();
     
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     fvScalarMatrix eEqn(
         fvm::ddt(rho_, e)
@@ -296,7 +296,7 @@ void DAResidualSonicFoam::calcPCMatWithFvMatrix(Mat PCMat)
     UEqn.relax();
 
     // ******** T Residuals (from energy equation) **********
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     // Get reference to thermo's internal energy
     volScalarField& e = thermo_.he();

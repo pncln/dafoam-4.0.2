@@ -154,7 +154,7 @@ void DAResidualRhoSimpleFoam::calcResiduals(const dictionary& options)
 
     // ******** e Residuals **********
     // copied and modified from EEqn.H
-    volScalarField alphaEff("alphaEff", thermo_.alphaEff(rho_ * alphat_));
+    volScalarField alphaEff("alphaEff", thermo_.alphaEff(alphat_));
 
     fvSourceEnergy_ = fvSource_ & U_;
 
